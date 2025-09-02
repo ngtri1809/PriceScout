@@ -1,0 +1,35 @@
+export default function HomePage() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+          Welcome to PriceScout
+        </h1>
+        <p className="text-xl text-gray-600 mb-12">
+          Track prices, compare deals, and get AI-powered price predictions
+        </p>
+        
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-2xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
+          <p className="text-gray-600 mb-6">
+            This is a working React application with Tailwind CSS!
+          </p>
+          <div className="space-y-4">
+            <div className="bg-blue-100 p-4 rounded-md">
+              <h3 className="font-semibold text-blue-800">✅ React is working</h3>
+              <p className="text-blue-600">The component is rendering successfully</p>
+            </div>
+            <div className="bg-green-100 p-4 rounded-md">
+              <h3 className="font-semibold text-green-800">✅ Tailwind CSS is working</h3>
+              <p className="text-green-600">Styling is being applied correctly</p>
+            </div>
+            <div className="bg-purple-100 p-4 rounded-md">
+              <h3 className="font-semibold text-purple-800">✅ JavaScript conversion complete</h3>
+              <p className="text-purple-600">All TypeScript files have been converted to JavaScript</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
