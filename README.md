@@ -9,24 +9,22 @@ PriceScout is a production-grade monorepo application that provides intelligent 
 ### Tech Stack
 - **Backend**: Node.js + Express + JavaScript
 - **Frontend**: React + Vite + Tailwind CSS + shadcn/ui
-- **Database**: MySQL + Prisma ORM
+- **Database**: AWS RDS MySQL (direct connection, no ORM)
 - **Authentication**: JWT + bcrypt
 - **Caching**: node-cache with TTL
-- **Rate Limiting**: Bottleneck for marketplace adapters
+- **Rate Limiting**: Express rate limiting
 - **Email**: AWS SES (prod) / MailHog (dev)
 - **Monitoring**: Prometheus + Pino logging
 - **Testing**: Jest (API) + Vitest (Web) + Cypress (E2E)
-- **ML**: TensorFlow.js + Python FastAPI Prophet service
+- **ML**: Python FastAPI Prophet service
 - **Deployment**: Docker + Docker Compose
 
 ### Monorepo Structure
 ```
 PriceScout/
 ├── apps/
-│   ├── api/          # Express.js API server
+│   ├── api/          # Express.js API server (server.js)
 │   └── web/          # React frontend
-├── packages/
-│   └── shared/       # Shared types and API client
 ├── infra/
 │   ├── ml-service/   # Python FastAPI ML service
 │   └── mysql/        # Database initialization
@@ -39,17 +37,73 @@ PriceScout/
 ### Prerequisites
 - Node.js 18+
 - pnpm 8+
-- Docker & Docker Compose
-- MySQL 8.0+
+- Docker & Docker Compose (optional)
+- AWS RDS MySQL instance
 
-### 1. Clone and Install
+### Installation
+
+#### 1. Install Node.js
+Download and install Node.js 18+ from [nodejs.org](https://nodejs.org/)
+
+**Verify installation:**
+```bash
+node --version  # Should be v18.0.0 or higher
+npm --version   # Should be v8.0.0 or higher
+```
+
+#### 2. Install pnpm
+Choose one of the following methods:
+
+**Method 1: Using npm (Recommended)**
+```bash
+npm install -g pnpm
+```
+
+**Method 2: Using Corepack (Node.js 16.13+)**
+```bash
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+**Method 3: Using Homebrew (macOS)**
+```bash
+brew install pnpm
+```
+
+**Method 4: Using curl (Linux/macOS)**
+```bash
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
+
+**Method 5: Using PowerShell (Windows)**
+```powershell
+iwr https://get.pnpm.io/install.ps1 -useb | iex
+```
+
+**Verify pnpm installation:**
+```bash
+pnpm --version  # Should be v8.0.0 or higher
+```
+
+#### 3. Install Docker (Optional)
+- **macOS**: Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Windows**: Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Linux**: Follow [Docker installation guide](https://docs.docker.com/engine/install/)
+
+**Verify Docker installation:**
+```bash
+docker --version
+docker-compose --version
+```
+
+### 4. Clone and Install
 ```bash
 git clone <repository-url>
 cd PriceScout
 pnpm install
 ```
 
-### 2. Environment Setup
+### 5. Environment Setup
 ```bash
 # Copy environment files
 cp apps/api/env.example apps/api/.env
@@ -58,30 +112,29 @@ cp apps/web/.env.example apps/web/.env
 # Edit the .env files with your configuration
 ```
 
-### 3. Database Setup
+### 6. Database Setup
 ```bash
-# Start MySQL (if not using Docker)
+# Set up AWS RDS MySQL instance
 # Create database: pricescout
 
-# Run migrations and seed data
-pnpm db:migrate
-pnpm db:seed
+# Run the schema on your RDS instance
+mysql -h your-rds-endpoint -u your-username -p < apps/api/schema.sql
 ```
 
-### 4. Start Development
+### 7. Start Development
 ```bash
-# Start all services with Docker Compose
-pnpm dev
-
-# Or start individual services
-pnpm --filter='./apps/api' dev    # API on :8080
+# Start individual services
+pnpm --filter='./apps/api' dev    # API on :3001
 pnpm --filter='./apps/web' dev    # Web on :5173
+
+# Or start all services with Docker Compose
+pnpm dev
 ```
 
-### 5. Access the Application
+### 8. Access the Application
 - **Web App**: http://localhost:5173
-- **API**: http://localhost:8080/api
-- **API Docs**: http://localhost:8080/api-docs
+- **API**: http://localhost:3001/api
+- **API Health**: http://localhost:3001/api/health
 - **MailHog**: http://localhost:8025
 - **ML Service**: http://localhost:8081
 
@@ -103,8 +156,7 @@ pnpm db:reset         # Reset database
 ```bash
 pnpm --filter='./apps/api' dev          # Start API server
 pnpm --filter='./apps/api' test         # Run API tests
-pnpm --filter='./apps/api' db:generate  # Generate Prisma client
-pnpm --filter='./apps/api' db:studio    # Open Prisma Studio
+pnpm --filter='./apps/api' start        # Start production server
 ```
 
 ### Web Specific
@@ -304,14 +356,26 @@ docker-compose -f docker-compose.prod.yml up -d
 
 #### API (.env)
 ```bash
-# Database
-DATABASE_URL="mysql://root:password@localhost:3306/pricescout"
+# AWS RDS Database
+DB_HOST="your-rds-endpoint.region.rds.amazonaws.com"
+DB_PORT=3306
+DB_USER="your-username"
+DB_PASSWORD="your-password"
+DB_NAME="pricescout"
 
 # JWT
 JWT_SECRET="your-super-secret-jwt-key"
 
-# Cache
-CACHE_TTL=60
+# Server
+PORT=3001
+NODE_ENV="development"
+
+# CORS
+CORS_ORIGIN="http://localhost:5173"
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 
 # Email
 SES_REGION="us-east-1"
@@ -321,19 +385,13 @@ MAILHOG_HOST="localhost"
 MAILHOG_PORT=1025
 
 # Prediction
-PREDICTOR_PROVIDER="tfjs"  # or "prophet"
+PREDICTOR_PROVIDER="prophet"
 ML_SERVICE_URL="http://ml:8080"
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-AMAZON_RATE_LIMIT=10
-EBAY_RATE_LIMIT=10
 ```
 
 #### Web (.env)
 ```bash
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:3001/api
 ```
 
 ## 🚀 Production Deployment
@@ -367,6 +425,10 @@ curl http://your-domain/api/health
 ```
 
 ## 🤝 Contributing
+Tri Nguyen
+Anh Nguyen
+Tony Nguyen
+Timothy Vu
 
 ### Development Workflow
 1. Fork the repository
@@ -424,39 +486,85 @@ curl http://your-domain/api/health
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Installation Issues
+
+#### pnpm Installation Problems
+```bash
+# If pnpm command not found after installation
+export PATH="$PATH:$HOME/.local/share/pnpm"
+# Add to ~/.bashrc or ~/.zshrc for permanent fix
+
+# If permission denied on macOS/Linux
+sudo npm install -g pnpm
+
+# If using nvm, ensure Node.js is active
+nvm use 18
+npm install -g pnpm
+```
+
+#### Node.js Version Issues
+```bash
+# Check current Node.js version
+node --version
+
+# If version is too old, update Node.js
+# Using nvm (recommended)
+nvm install 18
+nvm use 18
+
+# Or download from nodejs.org
+```
+
+#### Docker Issues
+```bash
+# If Docker daemon not running
+# macOS/Windows: Start Docker Desktop
+# Linux: Start Docker service
+sudo systemctl start docker
+
+# If permission denied
+sudo usermod -aG docker $USER
+# Log out and back in
+```
+
+### Common Runtime Issues
 
 #### Database Connection
 ```bash
-# Check MySQL is running
-docker-compose ps mysql
+# Check if API can connect to database
+curl http://localhost:3001/api/health
 
-# Check connection
-pnpm --filter='./apps/api' db:studio
+# Check AWS RDS connectivity
+telnet your-rds-endpoint 3306
 ```
 
 #### Port Conflicts
 ```bash
 # Check what's using ports
-lsof -i :8080
-lsof -i :5173
+lsof -i :3001  # API port
+lsof -i :5173  # Web port
 
 # Kill processes if needed
 kill -9 <PID>
 ```
 
-#### Cache Issues
+#### Module Not Found Errors
 ```bash
-# Clear cache (if implemented)
-curl -X POST http://localhost:8080/api/cache/clear
+# Clear node_modules and reinstall
+rm -rf node_modules
+rm -rf apps/*/node_modules
+pnpm install
 ```
 
 ### Logs
 ```bash
 # API logs
-docker-compose logs -f api
+pnpm --filter='./apps/api' dev
 
-# All services
+# Web logs  
+pnpm --filter='./apps/web' dev
+
+# All services with Docker
 docker-compose logs -f
 ```
 
@@ -466,12 +574,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Prisma**: Database ORM
-- **shadcn/ui**: UI components
-- **Tailwind CSS**: Styling
+- **Express.js**: Backend framework
 - **React**: Frontend framework
-- **Express**: Backend framework
-- **TensorFlow.js**: Machine learning
+- **Vite**: Build tool and dev server
+- **Tailwind CSS**: Utility-first CSS framework
+- **shadcn/ui**: UI components
+- **MySQL**: Database system
+- **AWS RDS**: Managed database service
+- **Node.js**: JavaScript runtime
+- **Python FastAPI**: ML service framework
 - **Prophet**: Time series forecasting
+- **Docker**: Containerization platform
 
 
