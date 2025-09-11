@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import { hash, compare } from './utils/pass.js';
 
 // Load environment variables
 dotenv.config();
@@ -68,10 +69,11 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Create user (in real app, hash password!)
+
+	const hashed = hash(password);
     const [result] = await pool.execute(
       'INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, NOW())',
-      [name, email, password] // ⚠️ Don't store plain passwords in production!
+      [name, email, hashed] 
     );
 
     res.json({ 
@@ -93,7 +95,7 @@ app.post('/api/auth/login', async (req, res) => {
       [email]
     );
 
-    if (users.length === 0 || users[0].password !== password) { // ⚠️ Don't compare plain passwords!
+    if (users.length === 0 || !compare(users[0].password, password)) { 
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
