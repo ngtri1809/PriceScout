@@ -103,6 +103,55 @@ INSERT INTO price_data (item_id, marketplace_id, price, currency, availability, 
 (3, 4, 799.99, 'USD', 'In Stock', 'https://bestbuy.com/galaxy-s24')
 ON DUPLICATE KEY UPDATE price = VALUES(price);
 
+-- Prophet ML Tables for Price Forecasting
+-- Products table (simplified for Prophet)
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sku VARCHAR(255) UNIQUE,
+    title TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Price history table for Prophet (time series data)
+CREATE TABLE IF NOT EXISTS price_history (
+    product_id INT NOT NULL,
+    ds DATE NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, ds),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Forecasts table for Prophet predictions
+CREATE TABLE IF NOT EXISTS forecasts (
+    product_id INT NOT NULL,
+    ds DATE NOT NULL,
+    yhat DECIMAL(10,2),
+    yhat_lower DECIMAL(10,2),
+    yhat_upper DECIMAL(10,2),
+    model_version VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, ds, model_version),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Model metadata table
+CREATE TABLE IF NOT EXISTS model_metadata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    model_version VARCHAR(50) NOT NULL,
+    model_type VARCHAR(50) DEFAULT 'prophet',
+    training_data_start DATE,
+    training_data_end DATE,
+    model_params JSON,
+    performance_metrics JSON,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_product_model (product_id, model_version)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_price_data_item_id ON price_data(item_id);
 CREATE INDEX idx_price_data_marketplace_id ON price_data(marketplace_id);
@@ -111,3 +160,10 @@ CREATE INDEX idx_items_name ON items(name);
 CREATE INDEX idx_items_category ON items(category);
 CREATE INDEX idx_watchlist_user_id ON watchlist(user_id);
 CREATE INDEX idx_price_alerts_user_id ON price_alerts(user_id);
+
+-- Prophet-specific indexes
+CREATE INDEX idx_price_history_ds ON price_history(product_id, ds);
+CREATE INDEX idx_forecasts_ds ON forecasts(product_id, ds);
+CREATE INDEX idx_forecasts_model_version ON forecasts(model_version);
+CREATE INDEX idx_model_metadata_product_id ON model_metadata(product_id);
+CREATE INDEX idx_model_metadata_active ON model_metadata(is_active);

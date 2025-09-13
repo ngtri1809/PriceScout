@@ -1,0 +1,36 @@
+# PriceScout ML Service Configuration
+# Copy this to settings.toml and update with your values
+
+[database]
+host = "localhost"
+port = 3306
+username = "pricescout"
+password = "password"
+database = "pricescout"
+charset = "utf8mb4"
+
+[aws]
+region = "us-east-1"
+s3_bucket = "pricescout-data"
+access_key_id = "your-access-key"
+secret_access_key = "your-secret-key"
+
+[prophet]
+# Prophet model parameters
+weekly_seasonality = true
+yearly_seasonality = true
+daily_seasonality = false
+seasonality_mode = "multiplicative"
+changepoint_prior_scale = 0.05
+seasonality_prior_scale = 10.0
+
+[training]
+# Training configuration
+min_data_points = 30
+forecast_periods = 365
+validation_split = 0.2
+retrain_frequency_days = 7
+
+[logging]
+level = "INFO"
+format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
