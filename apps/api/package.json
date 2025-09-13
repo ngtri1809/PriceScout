@@ -10,7 +10,7 @@
     "start": "node src/server.js",
     "clean": "echo 'No clean step needed for JS'",
     "type-check": "echo 'No type checking for JS'",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.config.js",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .js",

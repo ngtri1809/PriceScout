@@ -1,120 +1,205 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
+#!/usr/bin/env python3
+"""
+PriceScout ML Service
+Main entry point for the ML service with Flask API
+"""
+
+import os
 import logging
+from datetime import datetime
+from typing import Dict, Any, List
+
+from flask import Flask, request, jsonify
+from jobs.ingest_dataset import DataIngestionJob
+from jobs.train_prophet import ProphetTrainingJob
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="PriceScout ML Service",
-    description="Machine learning service for price predictions using Prophet",
-    version="1.0.0"
-)
+app = Flask(__name__)
 
-class PriceDataPoint(BaseModel):
-    price: float
-    timestamp: str
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'service': 'pricescout-ml'
+    })
 
-class ForecastRequest(BaseModel):
-    data: List[PriceDataPoint]
-    horizon: int = 14
-
-class ForecastResponse(BaseModel):
-    date: str
-    p10: float
-    p50: float
-    p90: float
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "ml-service"}
-
-@app.post("/forecast", response_model=List[ForecastResponse])
-async def forecast_prices(request: ForecastRequest):
-    """
-    Generate price forecasts using Prophet-like algorithm
-    For now, this is a mock implementation that returns realistic predictions
-    """
+@app.route('/ingest/s3', methods=['POST'])
+def ingest_from_s3():
+    """Ingest data from S3."""
     try:
-        logger.info(f"Received forecast request with {len(request.data)} data points, horizon: {request.horizon}")
+        data = request.get_json()
+        s3_key = data.get('s3_key')
         
-        if len(request.data) < 10:
-            raise HTTPException(status_code=400, detail="Insufficient data points (minimum 10 required)")
+        if not s3_key:
+            return jsonify({'error': 's3_key is required'}), 400
         
-        # Sort data by timestamp
-        sorted_data = sorted(request.data, key=lambda x: x.timestamp)
-        prices = [point.price for point in sorted_data]
+        job = DataIngestionJob()
+        success = job.ingest_from_s3(s3_key)
         
-        # Calculate basic statistics
-        mean_price = np.mean(prices)
-        std_price = np.std(prices)
-        trend = calculate_trend(prices)
-        
-        # Generate predictions
-        predictions = []
-        last_date = datetime.fromisoformat(sorted_data[-1].timestamp.replace('Z', '+00:00'))
-        
-        for i in range(1, request.horizon + 1):
-            future_date = last_date + timedelta(days=i)
+        if success:
+            stats = job.get_ingestion_stats()
+            return jsonify({
+                'status': 'success',
+                'message': f'Successfully ingested data from s3://{job.aws_config.s3_bucket}/{s3_key}',
+                'stats': stats
+            })
+        else:
+            return jsonify({'error': 'Failed to ingest data from S3'}), 500
             
-            # Simple trend projection with uncertainty
-            projected_price = mean_price + (trend * i)
-            
-            # Add some realistic uncertainty bands
-            uncertainty = std_price * (1 + i * 0.1)  # Increasing uncertainty over time
-            
-            predictions.append(ForecastResponse(
-                date=future_date.isoformat(),
-                p10=max(0, projected_price - 1.28 * uncertainty),  # 10th percentile
-                p50=projected_price,  # 50th percentile (median)
-                p90=projected_price + 1.28 * uncertainty  # 90th percentile
-            ))
+    except Exception as e:
+        logger.error(f"Error in S3 ingestion: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/ingest/local', methods=['POST'])
+def ingest_from_local():
+    """Ingest data from local file."""
+    try:
+        data = request.get_json()
+        file_path = data.get('file_path')
         
-        logger.info(f"Generated {len(predictions)} forecast points")
-        return predictions
+        if not file_path:
+            return jsonify({'error': 'file_path is required'}), 400
+        
+        job = DataIngestionJob()
+        success = job.ingest_from_local(file_path)
+        
+        if success:
+            stats = job.get_ingestion_stats()
+            return jsonify({
+                'status': 'success',
+                'message': f'Successfully ingested data from {file_path}',
+                'stats': stats
+            })
+        else:
+            return jsonify({'error': 'Failed to ingest data from local file'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error in local ingestion: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/train/product/<int:product_id>', methods=['POST'])
+def train_product_model(product_id: int):
+    """Train Prophet model for a specific product."""
+    try:
+        data = request.get_json() or {}
+        model_version = data.get('model_version')
+        
+        job = ProphetTrainingJob()
+        success = job.train_product_model(product_id, model_version)
+        
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': f'Successfully trained model for product {product_id}',
+                'product_id': product_id,
+                'model_version': model_version
+            })
+        else:
+            return jsonify({'error': f'Failed to train model for product {product_id}'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error training product model: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/train/all', methods=['POST'])
+def train_all_products():
+    """Train models for all products."""
+    try:
+        job = ProphetTrainingJob()
+        results = job.train_all_products()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Training completed for all products',
+            'results': results
+        })
         
     except Exception as e:
-        logger.error(f"Forecast error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Forecast failed: {str(e)}")
+        logger.error(f"Error training all products: {e}")
+        return jsonify({'error': str(e)}), 500
 
-def calculate_trend(prices: List[float]) -> float:
-    """Calculate simple linear trend from price data"""
-    if len(prices) < 2:
-        return 0.0
-    
-    # Simple linear regression
-    x = np.arange(len(prices))
-    y = np.array(prices)
-    
-    # Calculate slope
-    n = len(prices)
-    sum_x = np.sum(x)
-    sum_y = np.sum(y)
-    sum_xy = np.sum(x * y)
-    sum_x2 = np.sum(x * x)
-    
-    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
-    
-    return slope
+@app.route('/predict/<int:product_id>', methods=['GET'])
+def get_predictions(product_id: int):
+    """Get price predictions for a product."""
+    try:
+        from sqlalchemy import create_engine, text
+        from jobs.train_prophet import DatabaseConfig
+        import toml
+        
+        # Load config
+        with open('config/settings.toml', 'r') as f:
+            config = toml.load(f)
+        
+        db_config = DatabaseConfig(**config["database"])
+        engine = create_engine(db_config.url)
+        
+        # Get latest predictions
+        with engine.begin() as conn:
+            query = text("""
+                SELECT ds, yhat, yhat_lower, yhat_upper, model_version
+                FROM forecasts
+                WHERE product_id = :product_id
+                AND ds >= CURDATE()
+                ORDER BY ds
+                LIMIT 30
+            """)
+            
+            result = conn.execute(query, {"product_id": product_id})
+            predictions = []
+            
+            for row in result:
+                predictions.append({
+                    'date': str(row.ds),
+                    'predicted_price': float(row.yhat),
+                    'lower_bound': float(row.yhat_lower),
+                    'upper_bound': float(row.yhat_upper),
+                    'model_version': row.model_version
+                })
+            
+            return jsonify({
+                'status': 'success',
+                'product_id': product_id,
+                'predictions': predictions
+            })
+            
+    except Exception as e:
+        logger.error(f"Error getting predictions: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "service": "PriceScout ML Service",
-        "version": "1.0.0",
-        "endpoints": {
-            "health": "/health",
-            "forecast": "/forecast"
-        }
-    }
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    """Get service statistics."""
+    try:
+        ingestion_job = DataIngestionJob()
+        stats = ingestion_job.get_ingestion_stats()
+        
+        return jsonify({
+            'status': 'success',
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+if __name__ == '__main__':
+    # Check if config file exists
+    config_path = 'config/settings.toml'
+    if not os.path.exists(config_path):
+        logger.warning(f"Configuration file not found: {config_path}")
+        logger.info("Please copy config/settings.example.toml to config/settings.toml and update with your values")
+    
+    # Run the Flask app
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    logger.info(f"Starting PriceScout ML Service on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)
