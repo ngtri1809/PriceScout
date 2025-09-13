@@ -270,6 +270,152 @@ app.post('/api/watchlist', async (req, res) => {
   }
 });
 
+// Prophet ML Prediction routes
+app.get('/api/predictions/:productId', async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId);
+    const { days = 30 } = req.query;
+    
+    // Get price predictions from forecasts table
+    const [predictions] = await pool.execute(`
+      SELECT 
+        f.ds as date,
+        f.yhat as predicted_price,
+        f.yhat_lower as lower_bound,
+        f.yhat_upper as upper_bound,
+        f.model_version,
+        f.created_at as prediction_date
+      FROM forecasts f
+      WHERE f.product_id = ? 
+        AND f.ds >= CURDATE()
+        AND f.model_version = (
+          SELECT model_version 
+          FROM model_metadata 
+          WHERE product_id = ? AND is_active = 1
+          ORDER BY created_at DESC 
+          LIMIT 1
+        )
+      ORDER BY f.ds
+      LIMIT ?
+    `, [productId, productId, parseInt(days)]);
+    
+    res.json({
+      product_id: productId,
+      predictions: predictions,
+      count: predictions.length
+    });
+  } catch (error) {
+    console.error('Prediction error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/products', async (req, res) => {
+  try {
+    // Get all products with their latest price and prediction info
+    const [products] = await pool.execute(`
+      SELECT 
+        p.id,
+        p.sku,
+        p.title,
+        ph.price as current_price,
+        ph.ds as last_price_date,
+        f.yhat as next_predicted_price,
+        f.ds as next_prediction_date,
+        mm.model_version,
+        mm.performance_metrics
+      FROM products p
+      LEFT JOIN (
+        SELECT 
+          product_id,
+          price,
+          ds,
+          ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY ds DESC) as rn
+        FROM price_history
+      ) ph ON p.id = ph.product_id AND ph.rn = 1
+      LEFT JOIN (
+        SELECT 
+          product_id,
+          yhat,
+          ds,
+          ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY ds ASC) as rn
+        FROM forecasts
+        WHERE ds >= CURDATE()
+      ) f ON p.id = f.product_id AND f.rn = 1
+      LEFT JOIN model_metadata mm ON p.id = mm.product_id AND mm.is_active = 1
+      ORDER BY p.created_at DESC
+    `);
+    
+    res.json(products);
+  } catch (error) {
+    console.error('Products error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/products/:productId/history', async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId);
+    const { days = 90 } = req.query;
+    
+    // Get price history for a product
+    const [history] = await pool.execute(`
+      SELECT 
+        ds as date,
+        price,
+        created_at
+      FROM price_history
+      WHERE product_id = ?
+        AND ds >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      ORDER BY ds DESC
+    `, [productId, parseInt(days)]);
+    
+    res.json({
+      product_id: productId,
+      history: history,
+      count: history.length
+    });
+  } catch (error) {
+    console.error('Price history error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/ml/status', async (req, res) => {
+  try {
+    // Get ML service status and statistics
+    const [stats] = await pool.execute(`
+      SELECT 
+        COUNT(DISTINCT p.id) as total_products,
+        COUNT(DISTINCT ph.product_id) as products_with_data,
+        COUNT(DISTINCT f.product_id) as products_with_predictions,
+        COUNT(DISTINCT mm.product_id) as products_with_models,
+        AVG(JSON_EXTRACT(mm.performance_metrics, '$.mae')) as avg_mae,
+        AVG(JSON_EXTRACT(mm.performance_metrics, '$.mape')) as avg_mape
+      FROM products p
+      LEFT JOIN price_history ph ON p.id = ph.product_id
+      LEFT JOIN forecasts f ON p.id = f.product_id
+      LEFT JOIN model_metadata mm ON p.id = mm.product_id AND mm.is_active = 1
+    `);
+    
+    const [recentPredictions] = await pool.execute(`
+      SELECT COUNT(*) as count
+      FROM forecasts
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    `);
+    
+    res.json({
+      status: 'operational',
+      statistics: stats[0],
+      recent_predictions: recentPredictions[0].count,
+      last_updated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('ML status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

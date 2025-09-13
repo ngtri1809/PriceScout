@@ -1,4 +1,4 @@
-FROM node:18-alpine as builder
+FROM node:18 as builder
 
 WORKDIR /app
 
@@ -6,8 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm 9 (to match lockfile version)
+RUN npm install -g pnpm@9
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -15,17 +15,20 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
+# Force reinstall to fix native module issues
+RUN rm -rf node_modules && pnpm install --frozen-lockfile
+
+# Build the application (from workspace root)
 RUN pnpm build
 
 # Production stage
 FROM nginx:alpine
 
 # Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY apps/web/nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
 EXPOSE 80
