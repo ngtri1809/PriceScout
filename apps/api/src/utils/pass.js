@@ -1,14 +1,29 @@
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
-export function hash(password) {
-	const salt = crypto.randomBytes(16).toString('base64');
-	const hash = crypto.createHmac('sha512', salt).update(password).digest('base64');
-	return `${salt}:${hash}`
+export function hash(pass) {
+	const promise =  new Promise((resolve, reject) => {
+		bcrypt.hash(pass, 10, (err, result) => {
+			if (err) {
+				reject (err);
+			}
+			else {
+				resolve(result)
+			}
+		});
+	});
+	return promise;
 }
 
-export function compare(hashed, password) {
-	const [salt, compareHash] = hashed.split(':');
-	const hash = crypto.createHmac('sha512', salt).update(password).digest('base64');
-	if (hash === compareHash) return true;
-	return false;
+export function compare(pass, hash) {
+	const promise =  new Promise((resolve, reject) => {
+		bcrypt.compare(pass, hash, (err, result) => {
+			if (err) {
+				reject (err);
+			}
+			else {
+				resolve(result)
+			}
+		});
+	});
+	return promise;
 }
