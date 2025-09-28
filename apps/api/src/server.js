@@ -5,6 +5,13 @@ import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import {hash, compare} from './utils/pass.js';
+import { 
+  getAvailableProducts, 
+  getDateRange, 
+  findProductFilePath, 
+  getForecastData, 
+  validateProductExists 
+} from './utils/prophet-helpers.js';
 
 // Load environment variables
 dotenv.config();
@@ -418,12 +425,99 @@ app.get('/api/ml/status', async (req, res) => {
   }
 });
 
+// Prophet Forecast API
+app.get('/api/prophet/forecast', async (req, res) => {
+  try {
+    const { productName, date, month, year } = req.query;
+    
+    // Validate required parameters
+    if (!productName || !date || !month) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters: productName, date, and month are required' 
+      });
+    }
+    
+    // Set default year to 2024 if not provided
+    const yearValue = year || '2024';
+    
+    // Validate date format and check if it's in the past
+    const requestedDate = new Date(`${month}/${date}/${yearValue}`);
+    const currentDate = new Date();
+    const maxDate = new Date('2026-11-04');
+    
+    if (isNaN(requestedDate.getTime())) {
+      return res.status(400).json({ 
+        error: 'Invalid date format. Please use valid date, month, and year values' 
+      });
+    }
+    
+    if (requestedDate < currentDate) {
+      return res.status(400).json({ 
+        error: 'Requested date has already passed. Please select a future date' 
+      });
+    }
+    
+    if (requestedDate > maxDate) {
+      return res.status(400).json({ 
+        error: 'Requested date exceeds maximum allowed date (2026-11-04). Please select an earlier date' 
+      });
+    }
+    
+    // // Check if product exists
+    // const productExists = await validateProductExists(productName);
+    // if (!productExists) {
+    //   const availableProducts = await getAvailableProducts();
+    //   return res.status(404).json({ 
+    //     error: `Product forecast not found: ${productName}`,
+    //     availableProducts: availableProducts
+    //   });
+    // }
+    
+    // Get file path and forecast data
+    const filePath = await findProductFilePath(productName);
+    if (!filePath) {
+      const availableProducts = await getAvailableProducts();
+      return res.status(404).json({ 
+        error: `Product forecast not found: ${productName}`,
+        availableProducts: availableProducts
+      });
+    }
+    
+    const targetDate = `${yearValue}-${month.padStart(2, '0')}-${date.padStart(2, '0')}`;
+    const forecastData = await getForecastData(filePath, targetDate);
+    
+    if (!forecastData) {
+      const dateRange = await getDateRange(filePath);
+      return res.status(404).json({ 
+        error: `No forecast data found for ${productName} on ${month}/${date}/${yearValue}`,
+        availableDateRange: dateRange,
+        requestedDate: `${month}/${date}/${yearValue}`
+      });
+    }
+    
+    res.json({
+      success: true,
+      productName,
+      requestedDate: `${month}/${date}/${yearValue}`,
+      forecast: forecastData
+    });
+    
+  } catch (error) {
+    console.error('Prophet forecast error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error while fetching forecast data' 
+    });
+  }
+});
+
+
 // Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Simple API server running on http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🗄️  Database: AWS RDS MySQL`);
+  console.log(`🔮 Prophet forecast: http://localhost:${PORT}/api/prophet/forecast`);
 });
 
 export default app;
