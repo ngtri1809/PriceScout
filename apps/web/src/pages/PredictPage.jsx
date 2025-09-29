@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ApiClient } from '../lib/api-client';
+import PriceChart from '../components/PriceChart';
 
 const apiClient = new ApiClient(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api');
 
@@ -32,6 +33,8 @@ export default function PredictPage() {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [chartData, setChartData] = useState(null);
+  const [chartLoading, setChartLoading] = useState(false);
 
   // Generate date options (1-31)
   const dateOptions = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -46,6 +49,8 @@ export default function PredictPage() {
     setSelectedProduct(product);
     setPrediction(null);
     setError('');
+    // Fetch historical data when product is selected
+    fetchHistoricalData(product);
   };
 
   const handleDateChange = (date) => {
@@ -64,6 +69,29 @@ export default function PredictPage() {
     setSelectedYear(year);
     setPrediction(null);
     setError('');
+  };
+
+  const fetchHistoricalData = async (productName) => {
+    if (!productName) return;
+    
+    setChartLoading(true);
+    try {
+      console.log('Fetching historical data for:', productName);
+      const response = await apiClient.get(`/prophet/history?productName=${encodeURIComponent(productName)}`);
+      console.log('Historical data response:', response);
+      if (response.success) {
+        setChartData(response.data);
+        console.log('Chart data set:', response.data.length, 'items');
+      } else {
+        console.error('Failed to fetch historical data:', response.error);
+        setChartData(null);
+      }
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+      setChartData(null);
+    } finally {
+      setChartLoading(false);
+    }
   };
 
   const handlePredict = async () => {
@@ -323,6 +351,17 @@ export default function PredictPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Historical Price Chart */}
+      {selectedProduct && (
+        <div className="mt-8">
+          <PriceChart 
+            data={chartData} 
+            productName={selectedProduct} 
+            loading={chartLoading} 
+          />
         </div>
       )}
     </div>
