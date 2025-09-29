@@ -58,6 +58,11 @@ export class ApiClient {
     }
   }
 
+  // Generic GET method
+  async get(endpoint) {
+    return this.request(endpoint, { method: 'GET' });
+  }
+
   // Auth endpoints
   async register(data) {
     return this.request('/auth/register', {

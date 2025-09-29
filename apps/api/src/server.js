@@ -10,7 +10,8 @@ import {
   getDateRange, 
   findProductFilePath, 
   getForecastData, 
-  validateProductExists 
+  validateProductExists,
+  getHistoricalData
 } from './utils/prophet-helpers.js';
 
 // Load environment variables
@@ -506,6 +507,40 @@ app.get('/api/prophet/forecast', async (req, res) => {
     console.error('Prophet forecast error:', error);
     res.status(500).json({ 
       error: 'Internal server error while fetching forecast data' 
+    });
+  }
+});
+
+// Historical price data endpoint for charts
+app.get('/api/prophet/history', async (req, res) => {
+  try {
+    const { productName } = req.query;
+    if (!productName) {
+      return res.status(400).json({ 
+        error: 'Missing required parameter: productName' 
+      });
+    }
+    
+    const filePath = await findProductFilePath(productName);
+    if (!filePath) {
+      const availableProducts = await getAvailableProducts();
+      return res.status(404).json({ 
+        error: `Product not found: ${productName}`,
+        availableProducts: availableProducts
+      });
+    }
+    
+    const historicalData = await getHistoricalData(filePath);
+    
+    res.json({
+      success: true,
+      productName,
+      data: historicalData
+    });
+  } catch (error) {
+    console.error('Historical data error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error while fetching historical data' 
     });
   }
 });

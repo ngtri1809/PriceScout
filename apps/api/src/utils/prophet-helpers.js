@@ -196,3 +196,69 @@ export async function validateProductExists(productName) {
     return false;
   }
 }
+
+/**
+ * Get historical price data for charting
+ * @param {string} filePath - Path to the CSV file
+ * @returns {Promise<Array>} Array of historical data points
+ */
+export async function getHistoricalData(filePath) {
+  try {
+    const csvContent = await fs.readFile(filePath, 'utf-8');
+    const lines = csvContent.trim().split('\n');
+    const headers = lines[0].split(',');
+    
+    const data = [];
+    const currentDate = new Date();
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',');
+      const row = {};
+      
+      headers.forEach((header, index) => {
+        row[header.trim()] = values[index]?.trim();
+      });
+      
+      const rowDate = new Date(row.ds);
+      
+      // Include all data from December 2024 to current date
+      const dec2024 = new Date('2024-12-01');
+      if (rowDate >= dec2024 && rowDate <= currentDate) {
+        data.push({
+          date: row.ds,
+          actualPrice: row.y ? parseFloat(row.y) : null,
+          predictedPrice: row.yhat ? parseFloat(row.yhat) : null,
+          lowerBound: row.yhat_lower ? parseFloat(row.yhat_lower) : null,
+          upperBound: row.yhat_upper ? parseFloat(row.yhat_upper) : null,
+          isHistorical: true
+        });
+      }
+    }
+    
+    // If no data found (which shouldn't happen), return all data as historical
+    if (data.length === 0) {
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        const row = {};
+        
+        headers.forEach((header, index) => {
+          row[header.trim()] = values[index]?.trim();
+        });
+        
+        data.push({
+          date: row.ds,
+          actualPrice: row.y ? parseFloat(row.y) : null,
+          predictedPrice: row.yhat ? parseFloat(row.yhat) : null,
+          lowerBound: row.yhat_lower ? parseFloat(row.yhat_lower) : null,
+          upperBound: row.yhat_upper ? parseFloat(row.yhat_upper) : null,
+          isHistorical: true
+        });
+      }
+    }
+    
+    return data.sort((a, b) => new Date(a.date) - new Date(b.date));
+  } catch (error) {
+    console.error('Error reading historical data:', error);
+    return [];
+  }
+}
