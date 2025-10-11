@@ -183,7 +183,7 @@ app.get('/api/search', async (req, res) => {
       return res.status(400).json({ error: 'Search query required' });
     }
 	
-	const engines = ["google_shopping", "amazon", "eBay"]
+	const engines = ["google_shopping", "amazon", "ebay"]
 
 	const promises = engines.map(engine => {
 		const params = {
@@ -195,7 +195,7 @@ app.get('/api/search', async (req, res) => {
 	  
 	  if (engine === "amazon") {
 		  params["k"] = q;
-	  } else if (engine === "eBay") {
+	  } else if (engine === "ebay") {
 		  params["_nkw"] = q;
 	  } else {
 		  params["q"] = q;
