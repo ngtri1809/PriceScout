@@ -6,7 +6,7 @@ export function cleanResults(engine, results, limit) {
 		  name: item.title,
 		  source: item.source || "Google Shopping",
 		  price: item.extracted_price || null,
-		  product_link: item.link || null,
+		  product_link: item.product_link || null,
 		  thumbnail: item.thumbnail,
 		  rating: item.rating || null,
 		  reviews: item.reviews || null
@@ -29,13 +29,19 @@ export function cleanResults(engine, results, limit) {
 		res = (results.organic_results || results.shopping_results || []).map(item => ({
 		  name: item.title,
 		  source: "eBay",
-		  price: item.price?.value || null,
+		  price: parseFloat((item.price?.raw || "").replace(/[^0-9.]/g, "")) || null,
 		  product_link: item.link || null,
 		  thumbnail: item.thumbnail || null,
-		  rating: item.rating || null,
-		  reviews: item.reviews || null
+		  rating: item.seller_rating || item.rating || null,
+		  reviews: item.seller_reviews || item.reviews || null
 		}));
 	}
+	
+	res.sort((a,b) => {
+		if (a.price == null) return 1;
+		if (b.price ==null) return -1;
+		return a.price - b.price;
+	});
 	
 	return res.slice(0, limit);
 }
