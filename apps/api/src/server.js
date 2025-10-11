@@ -4,7 +4,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import {getJson} from "serpapi";
 import { hash, compare } from './utils/pass.js';
+import {cleanResults} from './utils/searchHelper.js';
 
 // Load environment variables
 dotenv.config();
@@ -142,7 +144,6 @@ app.get('/api/items', async (req, res) => {
 app.get('/api/items/:id', async (req, res) => {
   try {
     const itemId = parseInt(req.params.id);
-    
     // Get item details
     const [items] = await pool.execute(
       'SELECT * FROM items WHERE id = ?',
@@ -176,32 +177,40 @@ app.get('/api/items/:id', async (req, res) => {
 // Search route
 app.get('/api/search', async (req, res) => {
   try {
-    const { q } = req.query;
+    const { q, limit = 10 } = req.query;
     
     if (!q) {
       return res.status(400).json({ error: 'Search query required' });
     }
+	
+	const engines = ["google_shopping", "amazon", "eBay"]
 
-    const [items] = await pool.execute(`
-      SELECT 
-        i.*,
-        pd.price,
-        pd.marketplace_id,
-        pd.timestamp as last_price_timestamp
-      FROM items i
-      LEFT JOIN (
-        SELECT 
-          item_id,
-          price,
-          marketplace_id,
-          timestamp,
-          ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY timestamp DESC) as rn
-        FROM price_data
-      ) pd ON i.id = pd.item_id AND pd.rn = 1
-      WHERE i.name LIKE ? OR i.description LIKE ?
-      ORDER BY i.created_at DESC
-    `, [`%${q}%`, `%${q}%`]);
+	const promises = engines.map(engine => {
+		const params = {
+		engine,
+		api_key: process.env.SERPAPI_KEY,
+		hl: "en",
+		gl: "us"
+	  };
+	  
+	  if (engine === "amazon") {
+		  params["k"] = q;
+	  } else if (engine === "eBay") {
+		  params["_nkw"] = q;
+	  } else {
+		  params["q"] = q;
+	  }
 
+	  return getJson(params);
+	});
+
+	const results = await Promise.all(promises);
+	
+	const items = {};
+	results.forEach((result, i) => {
+		items[engines[i]] = cleanResults(engines[i], result, limit);
+	});
+	
     res.json(items);
   } catch (error) {
     console.error('Search error:', error);
@@ -213,7 +222,7 @@ app.get('/api/search', async (req, res) => {
 app.get('/api/watchlist/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    
+
     const [items] = await pool.execute(`
       SELECT 
         i.*,
@@ -301,11 +310,8 @@ app.get('/api/predictions/:productId', async (req, res) => {
       LIMIT ?
     `, [productId, productId, parseInt(days)]);
     
-    res.json({
-      product_id: productId,
-      predictions: predictions,
-      count: predictions.length
-    });
+	const data = {product_id: productId, predictions: predictions, count: predictions.length}
+    res.json(data);
   } catch (error) {
     console.error('Prediction error:', error);
     res.status(500).json({ error: 'Internal server error' });
