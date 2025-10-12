@@ -5,6 +5,8 @@ import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import {hash, compare} from './utils/pass.js';
+import {cleanResults} from './utils/searchHelper.js';
+import {getJson} from 'serpapi';
 import { 
   getAvailableProducts, 
   getDateRange, 
