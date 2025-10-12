@@ -1,0 +1,68 @@
+<!-- home.html (centered) -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Price Scout • Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gray-100 text-gray-800">
+    <div class="flex min-h-screen">
+      <aside class="w-56 bg-green-200/80 border-r border-green-300/70 p-6">
+        <div class="text-2xl font-semibold tracking-tight text-gray-900 mb-8">
+          Price Scout
+        </div>
+        <nav class="space-y-4">
+          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Home</a>
+          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Search</a>
+          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Lists</a>
+          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Settings</a>
+          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Help</a>
+        </nav>
+      </aside>
+
+      <!-- Main (centered) -->
+      <main class="flex-1 p-6 grid place-items-center">
+        <section class="w-full max-w-3xl text-center">
+          <h1 class="text-2xl md:text-3xl font-semibold text-gray-900">
+            Find the best price for any product
+          </h1>
+          <p class="mt-2 text-gray-600">
+            Paste a product link or type a keyword to compare deals and start tracking
+          </p>
+
+          <form id="searchForm" class="mt-6 flex items-center gap-3">
+            <label for="search" class="sr-only">Search</label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Paste a link to your product here"
+              class="flex-1 rounded-full border border-gray-300 bg-white px-5 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autofocus
+            />
+            <button
+              type="submit"
+              class="rounded-full bg-blue-600 px-5 py-3 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Search
+            </button>
+          </form>
+
+          <div class="mt-4 text-sm text-gray-500">
+            Try pasting a product URL from major retailers or search by model name
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      document.getElementById("searchForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const q = document.getElementById("search").value.trim();
+        if (!q) return;
+        window.location.href = "/item.html?query=" + encodeURIComponent(q);
+      });
+    </script>
+  </body>
+</html>
