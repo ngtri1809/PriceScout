@@ -11,7 +11,7 @@ export function cleanResults(engine, results, limit) {
 			rating: item.rating || null,
 			reviews: item.reviews || null
 		}));
-	  }
+		}
 
 	if (engine === "amazon") {
 		res = (results.organic_results || []).map(item => ({

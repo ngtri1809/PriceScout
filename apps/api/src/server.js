@@ -199,8 +199,8 @@ app.get('/api/search', async (req, res) => {
 		api_key: process.env.SERPAPI_KEY,
 		hl: "en",
 		gl: "us"
-	  };
-	  
+	};
+	
 	if (engine === "amazon") {
 		params["k"] = q;
 	} else if (engine === "ebay") {
