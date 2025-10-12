@@ -184,11 +184,11 @@ app.get('/api/items/:id', async (req, res) => {
 
 // Search route
 app.get('/api/search', async (req, res) => {
+		
   try {
-    const { q, limit = 10 } = req.query;
-    
+		const { q, limit = 10 } = req.query;
     if (!q) {
-      return res.status(400).json({ error: 'Search query required' });
+		return res.status(400).json({ error: 'Search query required' });
     }
 	
 	const engines = ["google_shopping", "amazon", "ebay"]
@@ -201,15 +201,15 @@ app.get('/api/search', async (req, res) => {
 		gl: "us"
 	  };
 	  
-	  if (engine === "amazon") {
-		  params["k"] = q;
-	  } else if (engine === "ebay") {
-		  params["_nkw"] = q;
-	  } else {
-		  params["q"] = q;
-	  }
+	if (engine === "amazon") {
+		params["k"] = q;
+	} else if (engine === "ebay") {
+		params["_nkw"] = q;
+	} else {
+		params["q"] = q;
+	}
 
-	  return getJson(params);
+	return getJson(params);
 	});
 
 	const results = await Promise.all(promises);
