@@ -12,17 +12,9 @@ export default function SearchPage() {
 
     setLoading(true);
     try {
-      // Mock search results
-      const mockResults = [
-        { id: '1', name: 'PlayStation 5 Console', sku: 'PS5-001', price: 499.99 },
-        { id: '2', name: 'iPhone 15 Pro', sku: 'IPHONE-15-001', price: 999.99 },
-        { id: '3', name: 'NVIDIA GeForce RTX 4090', sku: 'RTX-4090-001', price: 1599.99 },
-      ].filter(item => 
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.sku.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      setResults(mockResults);
+	  const response = await fetch(`http://localhost:3001/api/search?q=${encodeURIComponent(query)}`);
+	  const results = await response.json();
+      setResults(results);
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
@@ -58,12 +50,18 @@ export default function SearchPage() {
           <h2 className="text-xl font-semibold">Search Results</h2>
           {results.map(item => (
             <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
+			<div className="w-4 h-4 bg-gray-100 flex item-center justify-center rounded-md overflow-hidden">
+				<img className="w-full h-full object-contain" src={item.thumbnail}/>
+				</div>
               <h3 className="text-lg font-medium">{item.name}</h3>
-              <p className="text-gray-600">SKU: {item.sku}</p>
-              <p className="text-green-600 font-semibold">${item.price}</p>
+			  <p className="text-lg font-medium">Source: {item.source}</p>
+              <p className="text-gray-600">SKU: {item.sku ?? 'N/A'}</p>
+              <p className="text-green-600 font-semibold">Price: ${item.price ?? 'N/A'}</p>
+              <p className="text-green-600 font-semibold">Rating: {item.rating ?? 'N/A'}</p>
+             <p className="text-green-600 font-semibold">Reviews: {item.reviews ?? 'N/A'}</p>
               <div className="mt-2 space-x-2">
                 <a 
-                  href={`/item/${item.id}`}
+                  href={item.product_link}
                   className="text-blue-500 hover:text-blue-600"
                 >
                   View Details
@@ -86,5 +84,5 @@ export default function SearchPage() {
         </div>
       )}
     </div>
-  );
+  ); 
 }
