@@ -125,3 +125,4 @@ cypress/screenshots/
 apps/api/src/generated/
 apps/web/src/generated/
 
+apps/api/env
