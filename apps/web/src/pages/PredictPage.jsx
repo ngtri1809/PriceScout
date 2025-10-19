@@ -1,29 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ApiClient } from '../lib/api-client';
 import PriceChart from '../components/PriceChart';
+import { PRODUCT_CATALOG, getProductImagePath } from '../utils/product-helpers';
 
 const apiClient = new ApiClient(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api');
-
-// List of all 17 products available for prediction
-const PRODUCTS = [
-  'Heart Chalkboard',
-  'alarm clock bakelike green',
-  'alarm clock bakelike red',
-  'Cake Cases',
-  'Glass Hanging T Light',
-  'hand warmer red',
-  'Jam Making Set',
-  'Jumbo Bag Red',
-  'Jumbo Storage Bag Suki',
-  'Lunch Bag Cars Blue',
-  'Lunch Bag Pink Polkadot',
-  'Lunch Bag Red Retrospot',
-  'Lunch Bag Spaceboy Design',
-  'Party Bunting',
-  'White Hanging t-light Holder',
-  'Wooden Picture Frame',
-  'Woodland Charlotte Bag'
-];
 
 export default function PredictPage() {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -152,27 +132,57 @@ export default function PredictPage() {
             Select Product
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {PRODUCTS.map((product) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 max-h-[600px] overflow-y-auto pr-2">
+            {PRODUCT_CATALOG.map((product) => (
               <button
-                key={product}
-                onClick={() => handleProductSelect(product)}
-                className={`p-3 rounded-lg border-2 text-left transition-all duration-200 ${
-                  selectedProduct === product
-                    ? 'border-blue-500 bg-blue-50 text-blue-800'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                key={product.id}
+                onClick={() => handleProductSelect(product.name)}
+                className={`group relative overflow-hidden rounded-lg border-2 transition-all duration-200 ${
+                  selectedProduct === product.name
+                    ? 'border-blue-500 bg-blue-50 shadow-lg'
+                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                 }`}
               >
-                <span className="font-medium">{product}</span>
+                <div className="aspect-square relative">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                  {selectedProduct === product.name && (
+                    <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3 bg-white">
+                  <p className="font-medium text-sm text-gray-800 line-clamp-2">
+                    {product.name}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {product.category}
+                  </p>
+                </div>
               </button>
             ))}
           </div>
 
           {selectedProduct && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">Selected:</span> {selectedProduct}
-              </p>
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg flex items-center gap-3">
+              <img
+                src={getProductImagePath(selectedProduct)}
+                alt={selectedProduct}
+                className="w-16 h-16 object-cover rounded-lg"
+              />
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Selected Product</p>
+                <p className="text-sm text-blue-700">{selectedProduct}</p>
+              </div>
             </div>
           )}
         </div>
@@ -293,12 +303,21 @@ export default function PredictPage() {
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold text-gray-700 mb-2">Product Information</h4>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Product:</span> {prediction.productName}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Date:</span> {prediction.requestedDate}
-                    </p>
+                    <div className="flex items-center gap-4 mt-3">
+                      <img
+                        src={getProductImagePath(prediction.productName)}
+                        alt={prediction.productName}
+                        className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <div>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Product:</span> {prediction.productName}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Date:</span> {prediction.requestedDate}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-blue-50 p-4 rounded-lg">
