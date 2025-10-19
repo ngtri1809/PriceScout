@@ -57,8 +57,7 @@ export default function SearchPage() {
               </div>
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">{item.name}</h3>
-				  
+                  <h3 className="text-lg font-medium">{item.name}</h3>				  
                   <p>
                     <span className="text-gray-600">from</span>
                     <span className="text-lg font-medium"> {item.source}</span>
