@@ -9,8 +9,17 @@ export default function Layout() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-gray-900">PriceScout</h1>
+              <nav className="hidden md:flex space-x-6">
+                <a href="/" className="text-sm text-gray-500 hover:text-gray-700">Home</a>
+                <a href="/search" className="text-sm text-gray-500 hover:text-gray-700">Search</a>
+                <a href="/compare" className="text-sm text-gray-500 hover:text-gray-700">Compare</a>
+                <a href="/predict" className="text-sm text-gray-500 hover:text-gray-700">Predict</a>
+                {user && (
+                  <a href="/watchlist" className="text-sm text-gray-500 hover:text-gray-700">Watchlist</a>
+                )}
+              </nav>
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
