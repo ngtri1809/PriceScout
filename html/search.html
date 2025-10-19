@@ -1,68 +1,67 @@
-<!-- home.html (centered) -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Price Scout • Home</title>
+    <title>PriceScout • Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="min-h-screen bg-gray-100 text-gray-800">
-    <div class="flex min-h-screen">
-      <aside class="w-56 bg-green-200/80 border-r border-green-300/70 p-6">
-        <div class="text-2xl font-semibold tracking-tight text-gray-900 mb-8">
-          Price Scout
-        </div>
-        <nav class="space-y-4">
-          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Home</a>
-          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Search</a>
-          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Lists</a>
-          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Settings</a>
-          <a href="#" class="block px-2 py-1 rounded hover:bg-green-300/50">Help</a>
+    <!-- Top Navbar -->
+    <header class="sticky top-0 z-50 bg-green-200/80 border-b border-green-300/70 backdrop-blur">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <!-- Keep logo left -->
+        <a class="text-lg font-semibold tracking-tight text-gray-900 -m-50">
+          PriceScout
+        </a>
+
+        <nav class="flex items-center gap-6 text-sm">
+          <a href="/home.html" class="hover:text-gray-900 text-gray-700">Home</a>
+          <a href="/search.html" class="font-medium text-gray-900">Search</a>
+          <a href="/lists.html" class="hover:text-gray-900 text-gray-700">Lists</a>
+          <a href="/compare.html" class="hover:text-gray-900 text-gray-700">Compare</a>
         </nav>
-      </aside>
 
-      <!-- Main (centered) -->
-      <main class="flex-1 p-6 grid place-items-center">
-        <section class="w-full max-w-3xl text-center">
-          <h1 class="text-2xl md:text-3xl font-semibold text-gray-900">
-            Find the best price for any product
-          </h1>
-          <p class="mt-2 text-gray-600">
-            Paste a product link or type a keyword to compare deals and start tracking
-          </p>
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs">
+          AB
+        </div>
+      </div>
+    </header>
 
-          <form id="searchForm" class="mt-6 flex items-center gap-3">
-            <label for="search" class="sr-only">Search</label>
-            <input
-              id="search"
-              type="text"
-              placeholder="Paste a link to your product here"
-              class="flex-1 rounded-full border border-gray-300 bg-white px-5 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autofocus
-            />
-            <button
-              type="submit"
-              class="rounded-full bg-blue-600 px-5 py-3 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Search
-            </button>
-          </form>
+    <!-- Centered main area (subtract 56px = h-14) -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-56px)] grid place-items-center">
+      <!-- Search hero -->
+      <section class="w-full max-w-3xl text-center">
+        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900">
+          Find the best price for any product
+        </h1>
+        <p class="mt-2 text-gray-600">
+          Paste a product link or type a keyword to compare deals and start tracking
+        </p>
 
-          <div class="mt-4 text-sm text-gray-500">
-            Try pasting a product URL from major retailers or search by model name
-          </div>
-        </section>
-      </main>
-    </div>
+        <form class="mt-6 flex items-center gap-3">
+          <label for="search" class="sr-only">Search</label>
+          <input
+            id="search"
+            type="text"
+            placeholder="Paste a link to your product here"
+            class="flex-1 rounded-full border border-gray-300 bg-white px-5 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="rounded-full bg-blue-600 px-5 py-3 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Search
+          </button>
+        </form>
 
-    <script>
-      document.getElementById("searchForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        const q = document.getElementById("search").value.trim();
-        if (!q) return;
-        window.location.href = "/item.html?query=" + encodeURIComponent(q);
-      });
-    </script>
+        <div class="mt-4 text-sm text-gray-500">
+          Try pasting a product URL from major retailers or search by model name
+        </div>
+      </section>
+
+      <!-- Optional: drop your results section below if you want it visible initially -->
+      <!-- <section id="results" class="w-full mt-10"></section> -->
+    </main>
   </body>
 </html>
