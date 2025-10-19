@@ -12,17 +12,11 @@ export default function SearchPage() {
 
     setLoading(true);
     try {
-      // Mock search results
-      const mockResults = [
-        { id: '1', name: 'PlayStation 5 Console', sku: 'PS5-001', price: 499.99 },
-        { id: '2', name: 'iPhone 15 Pro', sku: 'IPHONE-15-001', price: 999.99 },
-        { id: '3', name: 'NVIDIA GeForce RTX 4090', sku: 'RTX-4090-001', price: 1599.99 },
-      ].filter(item => 
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        item.sku.toLowerCase().includes(query.toLowerCase())
+      const response = await fetch(
+        `http://localhost:3001/api/search?q=${encodeURIComponent(query)}`
       );
-      
-      setResults(mockResults);
+      const results = await response.json();
+      setResults(results);
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
@@ -33,7 +27,7 @@ export default function SearchPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Search Products</h1>
-      
+
       <form onSubmit={handleSearch} className="mb-8">
         <div className="flex gap-4">
           <input
@@ -56,24 +50,45 @@ export default function SearchPage() {
       {results.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Search Results</h2>
-          {results.map(item => (
-            <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-medium">{item.name}</h3>
-              <p className="text-gray-600">SKU: {item.sku}</p>
-              <p className="text-green-600 font-semibold">${item.price}</p>
-              <div className="mt-2 space-x-2">
-                <a 
-                  href={`/item/${item.id}`}
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  View Details
-                </a>
-                <a 
-                  href={`/compare?sku=${item.sku}`}
-                  className="text-green-500 hover:text-green-600"
-                >
-                  Compare Prices
-                </a>
+          {results.map((item) => (
+            <div key={item.id} className="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row gap-4">
+              <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden">
+                <img className="w-full h-full object-contain" src={item.thumbnail} alt={item.name}/>
+              </div>
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">{item.name}</h3>				  
+                  <p>
+                    <span className="text-gray-600">from</span>
+                    <span className="text-lg font-medium"> {item.source}</span>
+                  </p>
+
+                  <p>
+                    <span className="text-gray-600 font-semibold">Price: </span>
+                    <span className="text-green-600 font-semibold"> ${item.price ?? 'N/A'} </span>
+                  </p>
+
+                  <p>
+                    <span className="text-gray-600 font-semibold">Rating: </span>
+                    <span className="text-yellow-500 font-semibold"> {item.rating != null ? item.rating.toFixed(1) : 'N/A'} </span>
+                    <span className="text-gray-600 italic"> ({item.reviews ?? '0'} reviews) </span>
+                  </p>
+                </div>
+
+                <div className="mt-2 flex gap-4">
+                  <a
+                    href={item.product_link}
+                    className="text-blue-500 hover:text-blue-600 underline"
+                  >
+                    Product Source
+                  </a>
+                  <a
+                    href={`/compare?sku=${item.sku}`}
+                    className="text-green-500 hover:text-green-600 underline"
+                  >
+                    Compare Prices
+                  </a>
+                </div>
               </div>
             </div>
           ))}
