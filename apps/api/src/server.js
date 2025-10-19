@@ -219,7 +219,13 @@ app.get('/api/search', async (req, res) => {
 		items[engines[i]] = cleanResults(engines[i], result, limit);
 	});
 	
-    res.json(items);
+	const merged = Object.values(items).flat()
+	merged.sort((a,b) => {
+		if (a.price == null) return 1;
+		if (b.price ==null) return -1;
+		return a.price - b.price;
+	});
+    res.json(merged);
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Internal server error' });
