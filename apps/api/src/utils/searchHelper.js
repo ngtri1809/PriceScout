@@ -37,11 +37,5 @@ export function cleanResults(engine, results, limit) {
 		}));
 	}
 	
-	res.sort((a,b) => {
-		if (a.price == null) return 1;
-		if (b.price ==null) return -1;
-		return a.price - b.price;
-	});
-	
 	return res.slice(0, limit);
 }
