@@ -25,7 +25,6 @@ export default function SearchPage() {
   };
 
   return (
-<<<<<<< HEAD
     <div
     className="min-h-screen bg-gray-100 text-gray-800"
     style={{ minHeight: "100vh", backgroundColor: "#f3f4f6", color: "#1f2937", fontFamily: `ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"` }}
@@ -75,13 +74,6 @@ export default function SearchPage() {
 
         <form onSubmit={handleSearch} className="mt-6 flex items-center gap-3" style={{ marginTop: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <label htmlFor="search" className="sr-only">Search</label>
-=======
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Search Products</h1>
-
-      <form onSubmit={handleSearch} className="mb-8">
-        <div className="flex gap-4">
->>>>>>> main
           <input
             id="search"
             type="text"
@@ -117,56 +109,8 @@ export default function SearchPage() {
           </button>
         </form>
 
-<<<<<<< HEAD
         <div className="mt-4 text-sm text-gray-500" style={{ marginTop: "1rem", fontSize: "0.875rem", color: "#6b7280" }}>
           Try pasting a product URL from major retailers or search by model name
-=======
-      {results.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Search Results</h2>
-          {results.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row gap-4">
-              <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden">
-                <img className="w-full h-full object-contain" src={item.thumbnail} alt={item.name}/>
-              </div>
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">{item.name}</h3>				  
-                  <p>
-                    <span className="text-gray-600">from</span>
-                    <span className="text-lg font-medium"> {item.source}</span>
-                  </p>
-
-                  <p>
-                    <span className="text-gray-600 font-semibold">Price: </span>
-                    <span className="text-green-600 font-semibold"> ${item.price ?? 'N/A'} </span>
-                  </p>
-
-                  <p>
-                    <span className="text-gray-600 font-semibold">Rating: </span>
-                    <span className="text-yellow-500 font-semibold"> {item.rating != null ? item.rating.toFixed(1) : 'N/A'} </span>
-                    <span className="text-gray-600 italic"> ({item.reviews ?? '0'} reviews) </span>
-                  </p>
-                </div>
-
-                <div className="mt-2 flex gap-4">
-                  <a
-                    href={item.product_link}
-                    className="text-blue-500 hover:text-blue-600 underline"
-                  >
-                    Product Source
-                  </a>
-                  <a
-                    href={`/compare?sku=${item.sku}`}
-                    className="text-green-500 hover:text-green-600 underline"
-                  >
-                    Compare Prices
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
->>>>>>> main
         </div>
       </section>
 
@@ -185,31 +129,54 @@ export default function SearchPage() {
         )}
 
         {!loading && results.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-               style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fill, minmax(16rem, 1fr))" }}>
+          <div className="space-y-4" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <h2 className="text-xl font-semibold" style={{ fontSize: "1.25rem", fontWeight: 600 }}>Search Results</h2>
             {results.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                style={{ borderRadius: "0.5rem", border: "1px solid #e5e7eb", backgroundColor: "#ffffff", padding: "1rem", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
-              >
-                <h3 className="font-semibold text-gray-900" style={{ fontWeight: 600, color: "#111827" }}>{item.name}</h3>
-                <p className="text-sm text-gray-500 mt-1" style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>
-                  SKU: {item.sku}
-                </p>
-                <p className="text-sm text-gray-900 mt-2" style={{ fontSize: "0.95rem", color: "#111827", marginTop: "0.5rem" }}>
-                  ${item.price.toFixed(2)}
-                </p>
-                <div className="mt-3" style={{ marginTop: "0.75rem" }}>
-                  <a
-                    href={`/item.html?id=${encodeURIComponent(item.id)}`}
-                    className="text-blue-600 hover:text-blue-700 text-sm"
-                    style={{ color: "#2563eb", textDecoration: "none", fontSize: "0.875rem" }}
-                  >
-                    View details
-                  </a>
+              <div key={item.id} className="bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row gap-4" 
+                   style={{ backgroundColor: "#ffffff", padding: "1rem", borderRadius: "0.5rem", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div className="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden" 
+                     style={{ width: "12rem", height: "12rem", backgroundColor: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "0.375rem", overflow: "hidden" }}>
+                  <img className="w-full h-full object-contain" src={item.thumbnail} alt={item.name} 
+                       style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
                 </div>
-              </article>
+                <div className="flex-1 flex flex-col justify-between" style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <h3 className="text-lg font-medium" style={{ fontSize: "1.125rem", fontWeight: 500 }}>{item.name}</h3>				  
+                    <p style={{ margin: "0.25rem 0" }}>
+                      <span className="text-gray-600" style={{ color: "#4b5563" }}>from</span>
+                      <span className="text-lg font-medium" style={{ fontSize: "1.125rem", fontWeight: 500 }}> {item.source}</span>
+                    </p>
+
+                    <p style={{ margin: "0.25rem 0" }}>
+                      <span className="text-gray-600 font-semibold" style={{ color: "#4b5563", fontWeight: 600 }}>Price: </span>
+                      <span className="text-green-600 font-semibold" style={{ color: "#059669", fontWeight: 600 }}> ${item.price ?? 'N/A'} </span>
+                    </p>
+
+                    <p style={{ margin: "0.25rem 0" }}>
+                      <span className="text-gray-600 font-semibold" style={{ color: "#4b5563", fontWeight: 600 }}>Rating: </span>
+                      <span className="text-yellow-500 font-semibold" style={{ color: "#f59e0b", fontWeight: 600 }}> {item.rating != null ? item.rating.toFixed(1) : 'N/A'} </span>
+                      <span className="text-gray-600 italic" style={{ color: "#4b5563", fontStyle: "italic" }}> ({item.reviews ?? '0'} reviews) </span>
+                    </p>
+                  </div>
+
+                  <div className="mt-2 flex gap-4" style={{ marginTop: "0.5rem", display: "flex", gap: "1rem" }}>
+                    <a
+                      href={item.product_link}
+                      className="text-blue-500 hover:text-blue-600 underline"
+                      style={{ color: "#3b82f6", textDecoration: "underline" }}
+                    >
+                      Product Source
+                    </a>
+                    <a
+                      href={`/compare?sku=${item.sku}`}
+                      className="text-green-500 hover:text-green-600 underline"
+                      style={{ color: "#10b981", textDecoration: "underline" }}
+                    >
+                      Compare Prices
+                    </a>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
