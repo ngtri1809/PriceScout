@@ -35,69 +35,119 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-16">
-      <div className="bg-white shadow-md rounded-lg p-8">
-        <h2 className="text-2xl font-bold text-center mb-8">Login</h2>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        
-        <p className="text-center mt-4 text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-500 hover:text-blue-600">
-            Register here
-          </Link>
-        </p>
-        
-        <div className="mt-6 p-4 bg-gray-100 rounded-md">
-          <p className="text-sm text-gray-600">
-            <strong>Demo credentials:</strong><br />
-            Email: test@example.com<br />
-            Password: password
-          </p>
-        </div>
+   <div style={{
+  background: '#dbfae4',
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
+}}>
+  <div style={{
+    background: '#fff',
+    borderRadius: '12px',
+    boxShadow: '0 6px 24px rgba(38, 46, 67, 0.08)',
+    padding: '2rem',
+    maxWidth: '420px',
+    width: '100%'
+  }}>
+    <h2 style={{
+      fontWeight: 700,
+      fontSize: '2rem',
+      color: '#24292e',
+      textAlign: 'center',
+      marginBottom: '1.3rem'
+    }}>Login to PriceScout</h2>
+
+    {error && (
+      <div style={{color: '#b00020', marginBottom: '1rem', textAlign: 'center'}}>
+        {error}
       </div>
+    )}
+
+    <form onSubmit={handleSubmit}>
+      <div style={{marginBottom: '0.75rem'}}>
+        <label htmlFor="email" style={{
+          display: 'block',
+          marginBottom: 5,
+          fontWeight: 500
+        }}>Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+          autoComplete="username"
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #cfd8dc',
+            borderRadius: 6,
+            fontSize: '1rem',
+            boxSizing: 'border-box'
+          }}
+          placeholder="name@example.com"
+        />
+      </div>
+
+      <div style={{marginBottom: '1rem'}}>
+        <label htmlFor="password" style={{
+          display: 'block',
+          marginBottom: 5,
+          fontWeight: 500
+        }}>Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #cfd8dc',
+            borderRadius: 6,
+            fontSize: '1rem',
+            boxSizing: 'border-box'
+          }}
+          placeholder="Enter password"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: '0.7rem',
+          background: '#2265e3',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          fontSize: '1.08rem',
+          fontWeight: 600,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          marginBottom: '0.75rem'
+        }}
+      >
+        {loading ? 'Signing in...' : 'Login'}
+      </button>
+    </form>
+
+    <div style={{
+      textAlign: 'center',
+      marginTop: '0.5rem',
+      fontSize: '1rem'
+    }}>
+      Don't have an account?{' '}
+      <Link style={{color: '#2265e3'}} to="/register">Register here</Link>
     </div>
+  </div>
+</div>
+
+
   );
 }

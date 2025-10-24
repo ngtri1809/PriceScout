@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PriceScout • Item</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gray-100 text-gray-800">
+    <!-- Top Navbar -->
+    <header class="sticky top-0 z-50 bg-green-200/80 border-b border-green-300/70 backdrop-blur">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <a href="/home.html" class="text-lg font-semibold tracking-tight text-gray-900">PriceScout</a>
+        <nav class="flex items-center gap-6 text-sm">
+          <a href="/home.html" class="hover:text-gray-900 text-gray-700">Home</a>
+          <a href="/search.html" class="hover:text-gray-900 text-gray-700">Search</a>
+          <a href="/lists.html" class="hover:text-gray-900 text-gray-700">Lists</a>
+          <a href="/compare.html" class="hover:text-gray-900 text-gray-700">Compare</a>
+        </nav>
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs">AB</div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-56px)] grid place-items-center">
+      <section class="w-full max-w-5xl">
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="flex items-center justify-center">
+              <div class="aspect-[4/3] w-64 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <span class="text-gray-400">Product Image</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-2">
+                <div class="text-sm text-gray-500">Product</div>
+                <h1 id="name" class="text-xl font-semibold">—</h1>
+              </div>
+
+              <div>
+                <div class="text-sm text-gray-500">SKU</div>
+                <div id="sku" class="font-medium">—</div>
+              </div>
+
+              <div>
+                <div class="text-sm text-gray-500">Category</div>
+                <div id="category" class="font-medium">—</div>
+              </div>
+
+              <div>
+                <div class="text-sm text-gray-500">Current Price</div>
+                <div id="price" class="text-lg font-semibold">—</div>
+              </div>
+
+              <div>
+                <div class="text-sm text-gray-500">Item ID</div>
+                <div id="itemId" class="font-medium">—</div>
+              </div>
+
+              <div class="col-span-2">
+                <div class="text-sm text-gray-500">Description</div>
+                <p id="description" class="text-gray-700">—</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <div class="text-sm text-gray-600 mb-2">Price history</div>
+            <svg viewBox="0 0 400 120" class="w-full h-28">
+              <polyline fill="none" stroke="#111827" stroke-width="2"
+                        points="10,90 50,60 90,70 130,65 170,95 210,80 250,55 290,35 330,25 370,15" />
+              <line x1="10" y1="100" x2="390" y2="100" stroke="#e5e7eb" />
+            </svg>
+          </div>
+
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button id="addBtn" class="flex-1 rounded-md bg-gray-800 px-4 py-2 text-white hover:bg-gray-900">Add to List</button>
+            <button id="predictBtn" class="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Predict Future Prices</button>
+            <button id="refreshBtn" class="flex-1 rounded-md bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">Refresh Information</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Simulate the same mock data used in ItemPage.jsx
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id") || "PS5";
+      const mockItem = {
+        id,
+        name: "PlayStation 5 Console",
+        sku: "PS5-001",
+        description: "Next-generation gaming console with 4K gaming and ray tracing",
+        category: "Gaming",
+        price: 499.99,
+      };
+
+      // Populate fields
+      document.getElementById("name").textContent = mockItem.name;
+      document.getElementById("sku").textContent = mockItem.sku;
+      document.getElementById("category").textContent = mockItem.category;
+      document.getElementById("description").textContent = mockItem.description;
+      document.getElementById("price").textContent = `$${mockItem.price.toFixed(2)}`;
+      document.getElementById("itemId").textContent = mockItem.id;
+
+      // Button wiring (demo)
+      document.getElementById("addBtn").addEventListener("click", () => alert("Added to list"));
+      document.getElementById("predictBtn").addEventListener("click", () => alert("Prediction requested"));
+      document.getElementById("refreshBtn").addEventListener("click", () => window.location.reload());
+    </script>
+  </body>
+</html>

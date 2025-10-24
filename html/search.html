@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PriceScout • Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gray-100 text-gray-800">
+    <!-- Top Navbar -->
+    <header class="sticky top-0 z-50 bg-green-200/80 border-b border-green-300/70 backdrop-blur">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <!-- Keep logo left -->
+        <a class="text-lg font-semibold tracking-tight text-gray-900 -m-50">
+          PriceScout
+        </a>
+
+        <nav class="flex items-center gap-6 text-sm">
+          <a href="/home.html" class="hover:text-gray-900 text-gray-700">Home</a>
+          <a href="/search.html" class="font-medium text-gray-900">Search</a>
+          <a href="/lists.html" class="hover:text-gray-900 text-gray-700">Lists</a>
+          <a href="/compare.html" class="hover:text-gray-900 text-gray-700">Compare</a>
+        </nav>
+
+        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-xs">
+          AB
+        </div>
+      </div>
+    </header>
+
+    <!-- Centered main area (subtract 56px = h-14) -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-56px)] grid place-items-center">
+      <!-- Search hero -->
+      <section class="w-full max-w-3xl text-center">
+        <h1 class="text-2xl md:text-3xl font-semibold text-gray-900">
+          Find the best price for any product
+        </h1>
+        <p class="mt-2 text-gray-600">
+          Paste a product link or type a keyword to compare deals and start tracking
+        </p>
+
+        <form class="mt-6 flex items-center gap-3">
+          <label for="search" class="sr-only">Search</label>
+          <input
+            id="search"
+            type="text"
+            placeholder="Paste a link to your product here"
+            class="flex-1 rounded-full border border-gray-300 bg-white px-5 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="rounded-full bg-blue-600 px-5 py-3 text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Search
+          </button>
+        </form>
+
+        <div class="mt-4 text-sm text-gray-500">
+          Try pasting a product URL from major retailers or search by model name
+        </div>
+      </section>
+
+      <!-- Optional: drop your results section below if you want it visible initially -->
+      <!-- <section id="results" class="w-full mt-10"></section> -->
+    </main>
+  </body>
+</html>
