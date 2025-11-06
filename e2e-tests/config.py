@@ -14,10 +14,10 @@ class Config:
     BASE_URL = os.getenv('BASE_URL', 'http://localhost:5173')
     API_URL = os.getenv('API_URL', 'http://localhost:3001/api')
     
-    # Test credentials
+    # Test credentials - Updated to match actual login page
     TEST_USERNAME = os.getenv('TEST_USERNAME', 'testuser')
-    TEST_PASSWORD = os.getenv('TEST_PASSWORD', 'testpass123')
-    TEST_EMAIL = os.getenv('TEST_EMAIL', 'testuser@test.com')
+    TEST_EMAIL = os.getenv('TEST_EMAIL', 'test@example.com')
+    TEST_PASSWORD = os.getenv('TEST_PASSWORD', 'password')
     
     # Browser settings
     BROWSER = os.getenv('BROWSER', 'firefox')
