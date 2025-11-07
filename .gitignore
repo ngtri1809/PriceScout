@@ -80,7 +80,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -126,3 +125,6 @@ apps/api/src/generated/
 apps/web/src/generated/
 
 apps/api/env
+
+# Ignore mailmap file
+.mailmap
