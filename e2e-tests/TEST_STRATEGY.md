@@ -110,3 +110,7 @@ pytest test_pricescout_focused.py::TestCoreUserJourneys::test_03_user_login_vali
 - **Keep focused suite lean** (15-25 tests)
 - **Document critical paths** that must always work
 
+
+
+
+

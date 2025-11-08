@@ -198,10 +198,44 @@ class PredictPage(BasePage):
     
     def select_product(self, product_name):
         """Select product from product grid"""
-        # Find product button by clicking on it
-        product_button = self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, f"//button[.//p[contains(text(), '{product_name}')]]"))
-        )
+        # Normalize product name: convert underscores to spaces for matching
+        # Product names in catalog use spaces (e.g., "alarm clock bakelike green")
+        # but tests might use underscores (e.g., "alarm_clock_bakelike_green")
+        normalized_name = product_name.replace('_', ' ').lower()
+        
+        # Wait a bit for products to load
+        time.sleep(1)
+        
+        # Try to find product button with case-insensitive match
+        # First, try with normalized name (spaces)
+        try:
+            # Use translate() for case-insensitive comparison
+            xpath = f"//button[.//p[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{normalized_name}')]]"
+            product_button = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, xpath))
+            )
+        except:
+            # Fallback: try with original name (with underscores)
+            try:
+                xpath = f"//button[.//p[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{product_name.lower()}')]]"
+                product_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, xpath))
+                )
+            except:
+                # Last resort: scroll to make sure all products are visible and try again
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(0.5)
+                self.driver.execute_script("window.scrollTo(0, 0);")
+                time.sleep(0.5)
+                xpath = f"//button[.//p[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{normalized_name}')]]"
+                product_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, xpath))
+                )
+        
+        # Scroll element into view before clicking
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", product_button)
+        time.sleep(0.3)
+        
         product_button.click()
         self.selected_product = product_name
         time.sleep(1)  # Wait for selection
