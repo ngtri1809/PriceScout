@@ -39,3 +39,21 @@ export function cleanResults(engine, results, limit) {
 	
 	return res.slice(0, limit);
 }
+
+export function searchFilter(query, products, priceFilter) {
+	const q = query.toLowerCase();
+	const nameFiltered = products.filter(i => i.name?.toLowerCase().includes(q));
+	if (nameFiltered.length === 0) return [];
+	
+	const itemPrices = nameFiltered.map(i => i.price).filter(i => typeof i === "number").sort((a,b) => a-b);
+	const middle = Math.floor(itemPrices.length / 2);
+	
+	if (!priceFilter || itemPrices[middle] < 50) return nameFiltered;
+	
+	let median = itemPrices[middle];
+	if (itemPrices.length % 2 === 0) {
+		median = (itemPrices[middle-1] + itemPrices[middle]) / 2		
+	}
+
+	return nameFiltered.filter(i => i.price >= median * 0.25 && i.price <= median * 3.0);
+}

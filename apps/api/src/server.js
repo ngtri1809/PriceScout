@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import {hash, compare} from './utils/pass.js';
-import {cleanResults} from './utils/searchHelper.js';
+import {cleanResults, searchFilter} from './utils/searchHelper.js';
 import {getJson} from 'serpapi';
 import { 
   getAvailableProducts, 
@@ -220,12 +220,13 @@ app.get('/api/search', async (req, res) => {
 	});
 	
 	const merged = Object.values(items).flat()
-	merged.sort((a,b) => {
+	const filtered = searchFilter(q, merged, true)
+	filtered.sort((a,b) => {
 		if (a.price == null) return 1;
 		if (b.price ==null) return -1;
 		return a.price - b.price;
 	});
-    res.json(merged);
+    res.json(filtered);
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Internal server error' });
