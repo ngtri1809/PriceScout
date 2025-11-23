@@ -191,34 +191,39 @@ app.get('/api/search', async (req, res) => {
 		return res.status(400).json({ error: 'Search query required' });
     }
 	
-	const engines = ["google_shopping", "amazon", "ebay"]
+	const engines = ["google_shopping","amazon", "ebay"]
 
-	const promises = engines.map(engine => {
-		const params = {
-		engine,
-		api_key: process.env.SERPAPI_KEY,
-		hl: "en",
-		gl: "us"
-	};
-	
-	if (engine === "amazon") {
-		params["k"] = q;
-	} else if (engine === "ebay") {
-		params["_nkw"] = q;
-	} else {
-		params["q"] = q;
-	}
+	const results = await Promise.all(engines.map( async (engine) => {
+				const params = {
+				engine,
+				api_key: process.env.SERPAPI_KEY,
+				hl: "en",
+				gl: "us"
+			};
+			
+			if (engine === "amazon") {
+				params["k"] = q;
+			} else if (engine === "ebay") {
+				params["_nkw"] = q;
+			} else {
+				params["q"] = q;
+			}
+			
+			try {
+				return await getJson(params);
+			} catch (e) {
+				console.error(`API error fetching from ${engine}:`, e.message);
+				return null;
+			}
+		})
+	);
 
-	return getJson(params);
-	});
-
-	const results = await Promise.all(promises);
-	
 	const items = {};
 	results.forEach((result, i) => {
+		if (!result) return;
 		items[engines[i]] = cleanResults(engines[i], result, limit);
 	});
-	
+
 	const merged = Object.values(items).flat()
 	const filtered = searchFilter(q, merged, true)
 	filtered.sort((a,b) => {

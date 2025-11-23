@@ -45,15 +45,14 @@ export function searchFilter(query, products, priceFilter) {
 	const nameFiltered = products.filter(i => i.name?.toLowerCase().includes(q));
 	if (nameFiltered.length === 0) return [];
 	
+	if (!priceFilter) return nameFiltered;
+	
 	const itemPrices = nameFiltered.map(i => i.price).filter(i => typeof i === "number").sort((a,b) => a-b);
 	const middle = Math.floor(itemPrices.length / 2);
 	
-	if (!priceFilter || itemPrices[middle] < 50) return nameFiltered;
+	let median = itemPrices.length % 2 !== 0 ? itemPrices[middle] : (itemPrices[middle-1] + itemPrices[middle]) / 2		
 	
-	let median = itemPrices[middle];
-	if (itemPrices.length % 2 === 0) {
-		median = (itemPrices[middle-1] + itemPrices[middle]) / 2		
-	}
+	if (median < 50) return nameFiltered;
 
 	return nameFiltered.filter(i => i.price >= median * 0.25 && i.price <= median * 3.0);
 }
