@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import {hash, compare} from './utils/pass.js';
-import {cleanResults} from './utils/searchHelper.js';
+import {cleanResults, searchFilter} from './utils/searchHelper.js';
 import {getJson} from 'serpapi';
 import { 
   getAvailableProducts, 
@@ -191,41 +191,47 @@ app.get('/api/search', async (req, res) => {
 		return res.status(400).json({ error: 'Search query required' });
     }
 	
-	const engines = ["google_shopping", "amazon", "ebay"]
+	const engines = ["google_shopping","amazon", "ebay"]
 
-	const promises = engines.map(engine => {
-		const params = {
-		engine,
-		api_key: process.env.SERPAPI_KEY,
-		hl: "en",
-		gl: "us"
-	};
-	
-	if (engine === "amazon") {
-		params["k"] = q;
-	} else if (engine === "ebay") {
-		params["_nkw"] = q;
-	} else {
-		params["q"] = q;
-	}
+	const results = await Promise.all(engines.map( async (engine) => {
+				const params = {
+				engine,
+				api_key: process.env.SERPAPI_KEY,
+				hl: "en",
+				gl: "us"
+			};
+			
+			if (engine === "amazon") {
+				params["k"] = q;
+			} else if (engine === "ebay") {
+				params["_nkw"] = q;
+			} else {
+				params["q"] = q;
+			}
+			
+			try {
+				return await getJson(params);
+			} catch (e) {
+				console.error(`API error fetching from ${engine}:`, e.message);
+				return null;
+			}
+		})
+	);
 
-	return getJson(params);
-	});
-
-	const results = await Promise.all(promises);
-	
 	const items = {};
 	results.forEach((result, i) => {
+		if (!result) return;
 		items[engines[i]] = cleanResults(engines[i], result, limit);
 	});
-	
+
 	const merged = Object.values(items).flat()
-	merged.sort((a,b) => {
+	const filtered = searchFilter(q, merged, true)
+	filtered.sort((a,b) => {
 		if (a.price == null) return 1;
 		if (b.price ==null) return -1;
 		return a.price - b.price;
 	});
-    res.json(merged);
+    res.json(filtered);
   } catch (error) {
     console.error('Search error:', error);
     res.status(500).json({ error: 'Internal server error' });
