@@ -1,26 +1,84 @@
 // @ts-check
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { ApiClient } from '../lib/api-client.js';
+
+const apiClient = new ApiClient(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api');
 
 export default function ItemPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [addingToWatchlist, setAddingToWatchlist] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Mock item data
-    const mockItem = {
-      id: id,
-      name: 'PlayStation 5 Console',
-      sku: 'PS5-001',
-      description: 'Next-generation gaming console with 4K gaming and ray tracing',
-      category: 'Gaming',
-      price: 499.99
-    };
-    
-    setItem(mockItem);
-    setLoading(false);
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      apiClient.setAccessToken(token);
+    }
+    loadItem();
   }, [id]);
+
+  const loadItem = async () => {
+    try {
+      setLoading(true);
+      // For now, use mock data since items API might not be fully implemented
+      // In production, you'd fetch from: const data = await apiClient.getItem(id);
+      const mockItem = {
+        id: id,
+        name: 'PlayStation 5 Console',
+        sku: 'PS5-001',
+        description: 'Next-generation gaming console with 4K gaming and ray tracing',
+        category: 'Gaming',
+        price: 499.99
+      };
+      
+      setItem(mockItem);
+      
+      // Check if item is in watchlist
+      if (user) {
+        try {
+          const watchlist = await apiClient.getWatchlist();
+          setIsInWatchlist(watchlist.some(w => w.item_id === parseInt(id)));
+        } catch (err) {
+          // Ignore watchlist check errors
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load item:', err);
+      setError('Failed to load item details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setAddingToWatchlist(true);
+      setError('');
+      await apiClient.addToWatchlist(parseInt(id));
+      setIsInWatchlist(true);
+    } catch (err) {
+      console.error('Failed to add to watchlist:', err);
+      if (err.detail && err.detail.includes('already')) {
+        setIsInWatchlist(true);
+      } else {
+        setError('Failed to add to watchlist. Please try again.');
+      }
+    } finally {
+      setAddingToWatchlist(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -44,23 +102,38 @@ export default function ItemPage() {
             <div className="text-3xl font-bold text-green-600 mb-4">
               ${item.price}
             </div>
-            <a 
-              href={`/compare?sku=${item.sku}`}
-              className="inline-block bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-            >
-              Compare Prices
-            </a>
           </div>
           
           <div>
             <h2 className="text-xl font-semibold mb-4">Actions</h2>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
-              <button className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
-                Add to Watchlist
-              </button>
-              <button className="w-full bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600">
+              {isInWatchlist ? (
+                <a
+                  href="/watchlist"
+                  className="w-full bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 inline-block text-center"
+                >
+                  View in Watchlist
+                </a>
+              ) : (
+                <button
+                  onClick={handleAddToWatchlist}
+                  disabled={addingToWatchlist}
+                  className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 disabled:opacity-50"
+                >
+                  {addingToWatchlist ? 'Adding...' : 'Add to Watchlist'}
+                </button>
+              )}
+              <a
+                href="/predict"
+                className="w-full bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 inline-block text-center"
+              >
                 Get Price Prediction
-              </button>
+              </a>
             </div>
           </div>
         </div>

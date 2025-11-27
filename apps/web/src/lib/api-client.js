@@ -114,10 +114,10 @@ export class ApiClient {
     return this.request('/watchlist');
   }
 
-  async addToWatchlist(itemId) {
+  async addToWatchlist(itemId, itemData) {
     return this.request('/watchlist', {
       method: 'POST',
-      body: JSON.stringify({ itemId }),
+      body: JSON.stringify({ itemId, itemData }),
     });
   }
 

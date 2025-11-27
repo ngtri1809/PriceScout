@@ -1,10 +1,17 @@
 // @ts-check
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { ApiClient } from '../lib/api-client.js';
+
+const apiClient = new ApiClient(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api');
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [watchlistItems, setWatchlistItems] = useState(new Set());
+  const [addingItems, setAddingItems] = useState(new Set());
+  const { user } = useAuth();
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -17,10 +24,104 @@ export default function SearchPage() {
       );
       const results = await response.json();
       setResults(results);
+      
+      // Load watchlist items if user is logged in
+      if (user) {
+        loadWatchlistItems();
+      }
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWatchlistItems = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token || token === 'mock-jwt-token') {
+        // Load from localStorage for mock auth
+        const mockWatchlist = JSON.parse(localStorage.getItem('mockWatchlist') || '[]');
+        const itemNames = new Set(mockWatchlist.map(item => item.name?.toLowerCase()));
+        setWatchlistItems(itemNames);
+        return;
+      }
+      
+      apiClient.setAccessToken(token);
+      const watchlist = await apiClient.getWatchlist();
+      // Create a set of item names to check against search results
+      const itemNames = new Set(watchlist.map(item => item.name?.toLowerCase()));
+      setWatchlistItems(itemNames);
+    } catch (err) {
+      // Silently fail - watchlist check is optional
+      console.error('Failed to load watchlist items:', err);
+    }
+  };
+
+  const handleAddToWatchlist = async (item) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    try {
+      setAddingItems(prev => new Set(prev).add(item.id || item.name));
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token || token === 'mock-jwt-token') {
+        // For mock auth, add to localStorage
+        const mockWatchlist = JSON.parse(localStorage.getItem('mockWatchlist') || '[]');
+        const newItem = {
+          id: Date.now(), // Temporary ID
+          item_id: Date.now(),
+          name: item.name,
+          description: item.description || null,
+          category: item.category || null,
+          image_url: item.thumbnail,
+          current_price: item.price,
+          added_at: new Date().toISOString()
+        };
+        
+        // Check if already exists
+        const exists = mockWatchlist.some(w => w.name === item.name);
+        if (!exists) {
+          mockWatchlist.push(newItem);
+          localStorage.setItem('mockWatchlist', JSON.stringify(mockWatchlist));
+          setWatchlistItems(prev => new Set(prev).add(item.name?.toLowerCase()));
+        }
+        
+        setAddingItems(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(item.id || item.name);
+          return newSet;
+        });
+        return;
+      }
+      
+      apiClient.setAccessToken(token);
+      
+      // Send itemData to create item in database if it doesn't exist
+      await apiClient.addToWatchlist(null, {
+        name: item.name,
+        description: item.description || null,
+        category: item.category || null,
+        thumbnail: item.thumbnail,
+        price: item.price,
+        source: item.source,
+        product_link: item.product_link
+      });
+      
+      // Reload watchlist items to update the UI
+      await loadWatchlistItems();
+    } catch (err) {
+      console.error('Failed to add to watchlist:', err);
+      alert(err.detail || err.message || 'Failed to add to watchlist. Please try again.');
+    } finally {
+      setAddingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(item.id || item.name);
+        return newSet;
+      });
     }
   };
 
@@ -75,19 +176,30 @@ export default function SearchPage() {
                   </p>
                 </div>
 
-                <div className="mt-2 flex gap-4">
+                <div className="mt-2 flex gap-4 items-center">
                   <a
                     href={item.product_link}
                     className="text-blue-500 hover:text-blue-600 underline"
                   >
                     Product Source
                   </a>
-                  <a
-                    href={`/compare?sku=${item.sku}`}
-                    className="text-green-500 hover:text-green-600 underline"
-                  >
-                    Compare Prices
-                  </a>
+                  {user && (
+                    <button
+                      onClick={() => handleAddToWatchlist(item)}
+                      disabled={addingItems.has(item.id || item.name) || watchlistItems.has(item.name?.toLowerCase())}
+                      className={`px-4 py-1 rounded-md text-sm ${
+                        watchlistItems.has(item.name?.toLowerCase())
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : 'bg-green-500 text-white hover:bg-green-600'
+                      } disabled:opacity-50`}
+                    >
+                      {addingItems.has(item.id || item.name)
+                        ? 'Adding...'
+                        : watchlistItems.has(item.name?.toLowerCase())
+                        ? 'In Watchlist'
+                        : 'Add to Watchlist'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

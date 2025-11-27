@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import {hash, compare} from './utils/pass.js';
 import {cleanResults, searchFilter} from './utils/searchHelper.js';
 import {getJson} from 'serpapi';
@@ -37,6 +38,27 @@ const dbConfig = {
 const pool = mysql.createPool(dbConfig);
 
 const app = express();
+
+// JWT Secret (in production, use environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Authentication middleware
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+};
 
 // Middleware
 app.use(cors());
@@ -110,9 +132,18 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const user = users[0];
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
     res.json({ 
       message: 'Login successful',
-      user: { id: user.id, name: user.name, email: user.email }
+      user: { id: user.id, name: user.name, email: user.email },
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -526,6 +557,150 @@ app.get('/api/prophet/forecast', async (req, res) => {
     res.status(500).json({ 
       error: 'Internal server error while fetching forecast data' 
     });
+  }
+});
+
+// Watchlist endpoints
+app.get('/api/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    const [watchlistItems] = await pool.execute(`
+      SELECT 
+        w.id,
+        w.item_id,
+        w.created_at as added_at,
+        i.name,
+        i.description,
+        i.category,
+        i.brand,
+        i.model,
+        i.image_url,
+        pd.price as current_price,
+        pd.timestamp as last_price_timestamp
+      FROM watchlist w
+      INNER JOIN items i ON w.item_id = i.id
+      LEFT JOIN (
+        SELECT 
+          item_id,
+          price,
+          timestamp,
+          ROW_NUMBER() OVER (PARTITION BY item_id ORDER BY timestamp DESC) as rn
+        FROM price_data
+      ) pd ON i.id = pd.item_id AND pd.rn = 1
+      WHERE w.user_id = ?
+      ORDER BY w.created_at DESC
+    `, [userId]);
+    
+    res.json(watchlistItems);
+  } catch (error) {
+    console.error('Watchlist error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/watchlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { itemId, itemData } = req.body;
+    
+    let finalItemId = itemId;
+    
+    // If itemData is provided, create item first (for search results)
+    if (itemData && !itemId) {
+      // Check if item already exists by name and source
+      const [existingItems] = await pool.execute(
+        'SELECT id FROM items WHERE name = ? LIMIT 1',
+        [itemData.name]
+      );
+      
+      if (existingItems.length > 0) {
+        finalItemId = existingItems[0].id;
+      } else {
+        // Create new item
+        const [result] = await pool.execute(
+          `INSERT INTO items (name, description, category, brand, model, image_url, created_at) 
+           VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            itemData.name || 'Unknown Item',
+            itemData.description || null,
+            itemData.category || null,
+            itemData.brand || null,
+            itemData.model || null,
+            itemData.thumbnail || itemData.image_url || null
+          ]
+        );
+        finalItemId = result.insertId;
+        
+        // If price and source are provided, also add to price_data
+        if (itemData.price && itemData.source) {
+          // Get marketplace_id for the source
+          const [marketplaces] = await pool.execute(
+            'SELECT id FROM marketplaces WHERE name = ? LIMIT 1',
+            [itemData.source]
+          );
+          
+          if (marketplaces.length > 0) {
+            const marketplaceId = marketplaces[0].id;
+            await pool.execute(
+              `INSERT INTO price_data (item_id, marketplace_id, price, currency, url, timestamp) 
+               VALUES (?, ?, ?, 'USD', ?, NOW())`,
+              [finalItemId, marketplaceId, itemData.price, itemData.product_link || null]
+            );
+          }
+        }
+      }
+    }
+    
+    if (!finalItemId) {
+      return res.status(400).json({ error: 'Missing itemId or itemData' });
+    }
+    
+    // Check if already in watchlist
+    const [existing] = await pool.execute(
+      'SELECT id FROM watchlist WHERE user_id = ? AND item_id = ?',
+      [userId, finalItemId]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Item already in watchlist' });
+    }
+    
+    // Add to watchlist
+    const [result] = await pool.execute(
+      'INSERT INTO watchlist (user_id, item_id, created_at) VALUES (?, ?, NOW())',
+      [userId, finalItemId]
+    );
+    
+    res.json({ 
+      message: 'Item added to watchlist',
+      id: result.insertId,
+      itemId: finalItemId
+    });
+  } catch (error) {
+    console.error('Add to watchlist error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/watchlist/:itemId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const itemId = parseInt(req.params.itemId);
+    
+    const [result] = await pool.execute(
+      'DELETE FROM watchlist WHERE user_id = ? AND item_id = ?',
+      [userId, itemId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Item not found in watchlist' });
+    }
+    
+    res.json({ message: 'Item removed from watchlist' });
+  } catch (error) {
+    console.error('Remove from watchlist error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
