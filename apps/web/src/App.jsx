@@ -8,6 +8,7 @@ import SearchPage from './pages/SearchPage.jsx';
 import ItemPage from './pages/ItemPage.jsx';
 import WatchlistPage from './pages/WatchlistPage.jsx';
 import PredictPage from './pages/PredictPage.jsx';
+import AboutUsPage from './pages/AboutUsPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
               <Route path="search" element={<SearchPage />} />
               <Route path="item/:id" element={<ItemPage />} />
               <Route path="predict" element={<PredictPage />} />
+              <Route path="about" element={<AboutUsPage />} />
               <Route 
                 path="watchlist" 
                 element={

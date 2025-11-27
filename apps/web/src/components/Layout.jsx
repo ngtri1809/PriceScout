@@ -15,6 +15,7 @@ export default function Layout() {
                 <a href="/" className="text-sm text-gray-500 hover:text-gray-700">Home</a>
                 <a href="/search" className="text-sm text-gray-500 hover:text-gray-700">Search</a>
                 <a href="/predict" className="text-sm text-gray-500 hover:text-gray-700">Predict</a>
+                <a href="/about" className="text-sm text-gray-500 hover:text-gray-700">About Us</a>
                 {user && (
                   <a href="/watchlist" className="text-sm text-gray-500 hover:text-gray-700">Watchlist</a>
                 )}
