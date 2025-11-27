@@ -14,7 +14,6 @@ export default function Layout() {
               <nav className="hidden md:flex space-x-6">
                 <a href="/" className="text-sm text-gray-500 hover:text-gray-700">Home</a>
                 <a href="/search" className="text-sm text-gray-500 hover:text-gray-700">Search</a>
-                <a href="/compare" className="text-sm text-gray-500 hover:text-gray-700">Compare</a>
                 <a href="/predict" className="text-sm text-gray-500 hover:text-gray-700">Predict</a>
                 {user && (
                   <a href="/watchlist" className="text-sm text-gray-500 hover:text-gray-700">Watchlist</a>

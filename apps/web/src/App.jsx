@@ -6,7 +6,6 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import ItemPage from './pages/ItemPage.jsx';
-import ComparePage from './pages/ComparePage.jsx';
 import WatchlistPage from './pages/WatchlistPage.jsx';
 import PredictPage from './pages/PredictPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -23,7 +22,6 @@ function App() {
               <Route path="register" element={<RegisterPage />} />
               <Route path="search" element={<SearchPage />} />
               <Route path="item/:id" element={<ItemPage />} />
-              <Route path="compare" element={<ComparePage />} />
               <Route path="predict" element={<PredictPage />} />
               <Route 
                 path="watchlist" 

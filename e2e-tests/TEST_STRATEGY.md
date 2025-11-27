@@ -114,3 +114,8 @@ pytest test_pricescout_focused.py::TestCoreUserJourneys::test_03_user_login_vali
 
 
 
+
+
+
+
+

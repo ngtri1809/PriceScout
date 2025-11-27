@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from base_driver import BaseDriver
 from pages import (
     LoginPage, SearchPage, WatchlistPage, PredictPage,
-    RegisterPage, ComparePage, HomePage, ItemPage
+    RegisterPage, HomePage, ItemPage
 )
 from config import Config
 
@@ -113,14 +113,6 @@ class TestCoreUserJourneys:
         item_page.load_item("1")
         time.sleep(1)
         assert "item" in driver.current_url
-    
-    def test_08_compare_prices(self, driver):
-        """TC8: User can compare prices across marketplaces"""
-        compare_page = ComparePage(driver)
-        compare_page.compare("PS5-001")
-        time.sleep(2)
-        # Should show comparison results or handle gracefully
-        assert compare_page.get_comparison_count() >= 0
     
     def test_09_view_watchlist(self, driver):
         """TC9: User can view watchlist page"""

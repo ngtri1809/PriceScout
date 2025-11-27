@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from base_driver import BaseDriver
 from pages import (
     LoginPage, SearchPage, WatchlistPage, PredictPage,
-    RegisterPage, ComparePage, HomePage, ItemPage
+    RegisterPage, HomePage, ItemPage
 )
 from config import Config
 
@@ -320,46 +320,6 @@ class TestPredictionAdvanced:
             time.sleep(3)
         
         assert True  # All dates should work
-
-
-class TestComparePage:
-    """Price comparison tests"""
-    
-    def test_compare_valid_sku(self, driver):
-        """TC26: Compare prices with valid SKU"""
-        compare_page = ComparePage(driver)
-        compare_page.compare("PS5-001")
-        
-        # Should show comparison results
-        time.sleep(2)
-        assert compare_page.get_comparison_count() >= 0
-    
-    def test_compare_invalid_sku(self, driver):
-        """TC27: Compare prices with invalid SKU"""
-        compare_page = ComparePage(driver)
-        compare_page.compare("INVALID-SKU-12345")
-        
-        time.sleep(2)
-        assert True  # Should handle gracefully
-    
-    def test_compare_empty_sku(self, driver):
-        """TC28: Compare prices with empty SKU"""
-        compare_page = ComparePage(driver)
-        compare_page.get_page(compare_page.url)
-        
-        compare_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Compare')]")
-        compare_btn.click()
-        time.sleep(1)
-        
-        assert True  # Should handle gracefully
-    
-    def test_compare_special_characters(self, driver):
-        """TC29: Compare with special characters in SKU"""
-        compare_page = ComparePage(driver)
-        compare_page.compare("SKU!@#$%")
-        
-        time.sleep(2)
-        assert True  # Should handle gracefully
 
 
 class TestItemPage:

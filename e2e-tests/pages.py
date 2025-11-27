@@ -336,38 +336,6 @@ class RegisterPage(BasePage):
             return False
 
 
-class ComparePage(BasePage):
-    """Compare page objects"""
-    
-    # Locators
-    SKU_INPUT = (By.CSS_SELECTOR, "input[placeholder*='SKU']")
-    COMPARE_BUTTON = (By.XPATH, "//button[contains(text(), 'Compare')]")
-    COMPARISON_TABLE = (By.CSS_SELECTOR, "table")
-    COMPARISON_ROW = (By.CSS_SELECTOR, "tbody tr")
-    
-    def __init__(self, driver):
-        super().__init__(driver)
-        self.url = f"{Config.BASE_URL}/compare"
-    
-    def compare(self, sku):
-        """Perform price comparison"""
-        self.get_page(self.url)
-        
-        sku_input = self.find_element(self.SKU_INPUT)
-        sku_input.clear()
-        sku_input.send_keys(sku)
-        
-        compare_btn = self.find_clickable_element(self.COMPARE_BUTTON)
-        compare_btn.click()
-        time.sleep(2)
-    
-    def get_comparison_count(self):
-        """Get number of comparison results"""
-        try:
-            rows = self.driver.find_elements(*self.COMPARISON_ROW)
-            return len(rows)
-        except:
-            return 0
 
 
 class HomePage(BasePage):
