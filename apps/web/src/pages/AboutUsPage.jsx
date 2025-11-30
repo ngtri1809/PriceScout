@@ -16,17 +16,17 @@ export default function AboutUsPage() {
         <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
           <div className="text-center mb-4">
             <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-3xl font-bold text-white">TM</span>
+              <span className="text-3xl font-bold text-white">TN</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">Team Member 1</h3>
-            <p className="text-blue-600 font-medium mb-3">Role/Position</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">Tri Nguyen</h3>
+            <p className="text-blue-600 font-medium mb-3">Team Leader</p>
           </div>
           <div className="space-y-2 text-sm text-gray-600">
-            <p><strong>Email:</strong> member1@example.com</p>
-            <p><strong>LinkedIn:</strong> linkedin.com/in/member1</p>
-            <p><strong>GitHub:</strong> github.com/member1</p>
+            <p><strong>Email:</strong> <a href="mailto:ngtri1809@gmail.com" className="text-blue-600 hover:underline">ngtri1809@gmail.com</a></p>
+            <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/tri-nguyen-4b94b2249/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">linkedin.com/in/tri-nguyen-4b94b2249/</a></p>
+            <p><strong>GitHub:</strong> <a href="https://github.com/ngtri1809" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">github.com/ngtri1809</a></p>
             <p className="mt-4 text-gray-700">
-              Brief bio or description about this team member's contributions and expertise.
+              Expertise in Full stack AI/ML responsible for coordinate team task, manage deadline, as well as contributes to frontend backend, and machine learning codebase.
             </p>
           </div>
         </div>
