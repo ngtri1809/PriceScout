@@ -1,7 +1,7 @@
 # PriceScout 🛒
+Github: https://github.com/ngtri1809/PriceScout
 
 **Intelligent Price Tracking and Prediction Platform**
-
 PriceScout is a production-grade monorepo application that provides intelligent price tracking across multiple marketplaces and AI-powered price predictions using Facebook's Prophet algorithm. Built with modern technologies and clean architecture principles.
 
 ## 🏗️ Architecture
