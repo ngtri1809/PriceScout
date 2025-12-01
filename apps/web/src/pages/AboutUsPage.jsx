@@ -37,15 +37,15 @@ export default function AboutUsPage() {
             <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-3xl font-bold text-white">TM</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">Team Member 2</h3>
-            <p className="text-green-600 font-medium mb-3">Role/Position</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">Anh Nguyen</h3>
+            <p className="text-green-600 font-medium mb-3">Deputy Team Leader</p>
           </div>
           <div className="space-y-2 text-sm text-gray-600">
-            <p><strong>Email:</strong> member2@example.com</p>
-            <p><strong>LinkedIn:</strong> linkedin.com/in/member2</p>
-            <p><strong>GitHub:</strong> github.com/member2</p>
+            <p><strong>Email:</strong> <a href="mailto:alexnguyen091203@gmail.com" className="text-blue-600 hover:underline">alexnguyen091203@gmail.com</a></p>
+            <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/anh-hoai-nguyen-a046a5236/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">linkedin.com/in/anh-hoai-nguyen-a046a5236/</a></p>
+            <p><strong>GitHub:</strong> <a href="https://github.com/AnhHoaiNguyen-916" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">github.com/AnhHoaiNguyen-916</a></p>
             <p className="mt-4 text-gray-700">
-              Brief bio or description about this team member's contributions and expertise.
+              Full-Stack AI Engineer who is responsible for assisting team leader, contributes to implementation of local training ML prediction model & tests all functionalities of this Application.
             </p>
           </div>
         </div>
